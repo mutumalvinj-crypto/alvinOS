@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Portfolio OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall-1:#12352B; --wall-2:#07110E; --wall-3:#1B4A3A;
+  --ink:#ECF2EE; --muted:#8CA69A; --line:rgba(236,242,238,.12);
+  --glass:rgba(255,255,255,.07); --glass-2:rgba(255,255,255,.12);
+  --gold:#E7B24B;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --black:'Archivo Black','Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:#05100D;
+  font-family:var(--sans);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  padding:8px;overflow:hidden;
+}
+/* ---------- phone shell ---------- */
+#shell{
+  position:relative;
+  width:min(100vw - 10px, 392px);
+  height:min(100vh - 16px, 848px);
+  border-radius:38px;
+  padding:5px;
+  background:linear-gradient(160deg,#3a4b45,#0d1917 40%,#2b3a35);
+  box-shadow:0 30px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+  flex:0 0 auto;
+}
+#screen{
+  position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;
+  background:
+    radial-gradient(120% 70% at 78% 4%, var(--wall-3) 0%, transparent 55%),
+    radial-gradient(140% 90% at 12% 96%, #163a2e 0%, transparent 60%),
+    linear-gradient(170deg,var(--wall-1),var(--wall-2));
+  display:flex;flex-direction:column;
+}
+#screen::after{ /* woven kanga texture, very faint */
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.14;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 7px),
+                   repeating-linear-gradient(-45deg,rgba(255,255,255,.35) 0 1px,transparent 1px 7px);
+  mix-blend-mode:overlay;
+}
+/* ---------- status bar ---------- */
+#status{
+  position:relative;z-index:3;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 4px;font-size:12.5px;letter-spacing:.2px;color:var(--ink);
+}
+#status .net{display:flex;gap:7px;align-items:center;color:var(--muted)}
+#status b{font-weight:600}
+.batt{width:22px;height:11px;border:1.4px solid var(--muted);border-radius:3px;position:relative;display:inline-block}
+.batt::after{content:'';position:absolute;top:1.4px;left:1.4px;bottom:1.4px;width:64%;background:var(--gold);border-radius:1px}
+.batt::before{content:'';position:absolute;right:-3.4px;top:3px;width:2px;height:5px;background:var(--muted);border-radius:0 2px 2px 0}
+/* ---------- screen stage ---------- */
+#stage{position:relative;z-index:2;flex:1 1 auto;overflow:hidden}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+@keyframes inR{from{transform:translateX(26%);opacity:0}to{transform:none;opacity:1}}
+@keyframes inL{from{transform:translateX(-18%);opacity:.4}to{transform:none;opacity:1}}
+.view.push{animation:inR .26s cubic-bezier(.2,.8,.25,1)}
+.view.pop{animation:inL .24s cubic-bezier(.2,.8,.25,1)}
+@media (prefers-reduced-motion:reduce){.view.push,.view.pop{animation:none}}
+.scroll{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+/* ---------- home ---------- */
+.searchbar{
+  margin:8px 18px 4px;display:flex;align-items:center;gap:9px;
+  background:var(--glass);border:1px solid var(--line);border-radius:14px;
+  padding:9px 13px;color:var(--muted);font-size:13.5px;cursor:pointer;
+}
+.widget{
+  margin:12px 18px 6px;padding:14px 16px;border-radius:20px;
+  background:linear-gradient(140deg,rgba(231,178,75,.17),rgba(255,255,255,.05));
+  border:1px solid rgba(231,178,75,.28);
+}
+.widget .row{display:flex;align-items:baseline;gap:10px}
+.widget .n{font-family:var(--black);font-size:34px;line-height:.9;color:var(--gold)}
+.widget .lab{font-size:12.5px;color:var(--muted);line-height:1.35}
+.widget .sub{margin-top:9px;font-size:12.5px;color:rgba(236,242,238,.8);line-height:1.45}
+.pagehead{display:flex;align-items:center;justify-content:space-between;margin:16px 20px 2px}
+.pagehead h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.2px}
+.pagehead .count{font-size:12px;color:var(--muted)}
+.arrows{display:flex;gap:6px}
+.arrows button{
+  width:30px;height:30px;border-radius:10px;border:1px solid var(--line);
+  background:var(--glass);color:var(--ink);font-size:14px;line-height:1;cursor:pointer;
+}
+.arrows button:disabled{opacity:.28}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 6px;padding:14px 14px 10px}
+.app{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tile{
+  width:58px;height:58px;border-radius:17px;display:grid;place-items:center;
+  box-shadow:0 5px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.22);
+  position:relative;overflow:hidden;
+}
+.tile::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.22),transparent 55%)}
+.tile svg{width:28px;height:28px;position:relative;z-index:1;color:rgba(255,255,255,.93)}
+.app .nm{font-size:10.5px;line-height:1.2;color:var(--ink);text-align:center;max-width:76px;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.app:active .tile{transform:scale(.9);transition:transform .1s}
+.dots{display:flex;gap:7px;justify-content:center;padding:2px 0 8px}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(236,242,238,.3);border:0;padding:0;cursor:pointer}
+.dot.on{background:var(--gold);width:18px;border-radius:3px}
+/* ---------- dock ---------- */
+#dock{
+  position:relative;z-index:3;flex:0 0 auto;margin:0 12px 6px;padding:10px 6px 8px;
+  background:var(--glass);border:1px solid var(--line);border-radius:24px;
+  backdrop-filter:blur(14px);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+}
+/* ---------- app view ---------- */
+.appbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:rgba(7,17,14,.55);backdrop-filter:blur(10px);
+}
+.back{
+  display:flex;align-items:center;gap:5px;background:var(--glass);border:1px solid var(--line);
+  color:var(--ink);border-radius:12px;padding:7px 11px 7px 8px;font:inherit;font-size:12.5px;cursor:pointer;
+}
+.back svg{width:13px;height:13px}
+.appbar .t{font-size:14px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero{padding:20px 20px 16px;display:flex;gap:14px;align-items:flex-start}
+.hero .tile{width:62px;height:62px;border-radius:19px;flex:0 0 auto}
+.hero h1{margin:0 0 4px;font-family:var(--black);font-size:23px;line-height:1.05;letter-spacing:-.4px}
+.hero p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+.pill{display:inline-block;margin-top:9px;font-size:11px;padding:4px 9px;border-radius:999px;
+  border:1px solid currentColor;letter-spacing:.3px}
+.alias{padding:0 20px 14px;font-size:11.5px;color:var(--muted)}
+.cards{padding:0 14px 20px;display:flex;flex-direction:column;gap:10px}
+.card{
+  width:100%;text-align:left;background:var(--glass);border:1px solid var(--line);
+  color:var(--ink);border-radius:18px;padding:14px 15px;cursor:pointer;font:inherit;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.card:active{background:var(--glass-2)}
+.card .ct{font-size:14px;font-weight:600;margin-bottom:3px}
+.card .cs{font-size:12px;color:var(--muted);line-height:1.4}
+.card .chev{color:var(--muted);flex:0 0 auto}
+.card .chev svg{width:14px;height:14px}
+/* ---------- detail ---------- */
+.detail{padding:18px 20px 26px}
+.detail h3{margin:0 0 4px;font-family:var(--black);font-size:19px;letter-spacing:-.3px}
+.detail .of{font-size:12px;color:var(--muted);margin-bottom:16px}
+.detail ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+.detail li{font-size:13.5px;line-height:1.55;padding-left:16px;position:relative;color:rgba(236,242,238,.92)}
+.detail li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:2px;background:var(--gold)}
+/* ---------- search ---------- */
+.searchwrap{padding:12px 16px 6px}
+.searchwrap input{
+  width:100%;background:var(--glass);border:1px solid var(--line);border-radius:14px;
+  padding:11px 14px;color:var(--ink);font:inherit;font-size:14px;outline:none;
+}
+.searchwrap input::placeholder{color:var(--muted)}
+.results{padding:8px 12px 20px;display:flex;flex-direction:column;gap:6px}
+.res{display:flex;align-items:center;gap:12px;background:none;border:0;padding:8px 6px;cursor:pointer;
+  color:var(--ink);font:inherit;text-align:left;border-radius:14px}
+.res:active{background:var(--glass)}
+.res .tile{width:40px;height:40px;border-radius:12px}
+.res .tile svg{width:20px;height:20px}
+.res .rn{font-size:13.5px;font-weight:600}
+.res .rs{font-size:11.5px;color:var(--muted);margin-top:2px}
+.empty{padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+
+/* ---------- working apps ---------- */
+.run{padding:14px 16px 26px}
+.frow{display:flex;gap:9px;margin-bottom:10px}
+.fl{flex:1;display:block;font-size:11px;color:var(--muted);letter-spacing:.2px}
+.in{width:100%;margin-top:5px;background:var(--glass);border:1px solid var(--line);border-radius:12px;
+  padding:11px 12px;color:var(--ink);font:inherit;font-size:15px;outline:none;-webkit-appearance:none}
+.in:focus{border-color:var(--gold)}
+textarea.in{resize:vertical;font-size:12px}
+.btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{flex:1;background:var(--gold);color:#101a12;border:0;border-radius:13px;padding:12px 14px;
+  font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.35}
+.btn.ghost{background:var(--glass);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.sm{flex:2;font-size:12.5px;padding:9px}
+.runrow{padding:0 14px 14px}
+.out{margin-top:14px;padding:13px 15px;border-radius:17px;
+  background:linear-gradient(150deg,rgba(231,178,75,.14),rgba(255,255,255,.04));
+  border:1px solid rgba(231,178,75,.28)}
+.orow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;padding:4px 0;color:var(--muted)}
+.orow b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+.orow .big{font-family:var(--black);font-size:22px;color:var(--gold)}
+.note{margin-top:9px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.sect{margin:20px 0 10px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:7px}
+.list{display:flex;flex-direction:column;gap:7px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;
+  background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.li small{color:var(--muted);font-size:11px}
+.li b{font-variant-numeric:tabular-nums}
+.li.done{opacity:.55}
+.li span:last-child{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.x{background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:3px 7px;border-radius:8px;font-family:inherit}
+.x.mark{color:var(--gold)}
+.x.wide{flex:1;background:var(--glass);border:1px solid var(--line);padding:8px}
+.none{font-size:12px;color:var(--muted);line-height:1.5;padding:10px 2px}
+.tins{display:flex;flex-direction:column;gap:14px}
+.tin{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:12px}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold)}
+.seatmap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seat{aspect-ratio:1/1;border-radius:12px;border:1px solid var(--line);background:var(--glass);
+  color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.seat.on{background:var(--gold);color:#101a12;border-color:var(--gold);font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{flex:1;background:var(--glass);border:1px solid var(--line);color:var(--muted);border-radius:12px;
+  padding:9px;font:inherit;font-size:12.5px;cursor:pointer}
+.tab.on{background:var(--gold);color:#101a12;border-color:var(--gold);font-weight:600}
+.keycard{background:linear-gradient(145deg,rgba(231,178,75,.22),rgba(255,255,255,.05));
+  border:1px solid rgba(231,178,75,.4);border-radius:19px;padding:17px;margin-bottom:12px}
+.keycard.sm{padding:13px}
+.kn{font-family:var(--black);font-size:27px;color:var(--gold);letter-spacing:-.5px}
+.knm{font-size:16px;font-weight:600;margin-top:3px}
+.kmeta{font-size:11.5px;color:var(--muted);margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--glass);border:1px solid var(--line);color:var(--muted);border-radius:999px;
+  padding:7px 11px;font:inherit;font-size:11.5px;cursor:pointer}
+.chip.on{background:var(--gold);color:#101a12;border-color:var(--gold);font-weight:600}
+.months{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.mo{background:var(--glass);border:1px solid var(--line);color:var(--ink);border-radius:12px;
+  padding:8px 10px;font:inherit;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.mo small{color:var(--muted);font-size:9.5px}
+.ibtn{background:var(--glass);border:1px solid var(--line);color:var(--muted);border-radius:11px;
+  padding:7px 11px;font:inherit;font-size:12px;cursor:pointer}
+.cta{margin:12px 18px 0;display:flex}
+.cta button{flex:1;background:var(--gold);color:#101a12;border:0;border-radius:14px;padding:12px;
+  font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.demo{background:rgba(255,255,255,.05);border:1px dashed var(--line);border-radius:12px;
+  padding:9px 11px;font-size:10.5px;color:var(--muted);margin-bottom:12px;line-height:1.45}
+.jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.jt{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:12px 6px;color:var(--ink);
+  font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center}
+.jt b{font-size:11.5px;line-height:1.2}
+.jt small{font-size:9.5px;color:var(--muted)}
+.jt.on{border-color:var(--gold);background:rgba(231,178,75,.14)}
+.steps{display:flex;gap:6px}
+.stp{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}
+.stp.on{background:var(--gold)}
+.msgbox{background:rgba(231,178,75,.12);border:1px solid rgba(231,178,75,.3);border-radius:16px;
+  border-bottom-left-radius:4px;padding:14px;font-size:13px;line-height:1.55}
+.hist{display:flex;gap:8px;align-items:flex-end;height:118px;margin-top:4px}
+.hb{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.hb i{display:block;width:100%;background:linear-gradient(180deg,var(--gold),rgba(231,178,75,.35));border-radius:5px 5px 0 0}
+.hb small{font-size:9.5px;color:var(--muted)}
+.code{margin-top:12px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:11px;
+  font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;color:var(--gold);overflow-x:auto;white-space:nowrap}
+.st-paid{color:#7dc49a}.st-short{color:var(--gold)}.st-silent{color:#d9907f}
+.run .card{align-items:center}
+/* ---------- nav bar ---------- */
+#nav{
+  position:relative;z-index:3;flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:52px;
+  padding:6px 0 10px;
+}
+#nav button{background:none;border:0;color:rgba(236,242,238,.72);cursor:pointer;padding:6px 14px}
+#nav button:disabled{opacity:.25}
+#nav svg{width:17px;height:17px;display:block}
+.homepill{width:96px;height:5px;border-radius:3px;background:rgba(236,242,238,.72)}
+</style>
+</head>
+<body>
+<div id="shell"><div id="screen">
+
+  <div id="status">
+    <b id="clock">—</b>
+    <div class="net"><span>OPUS 5G</span><span class="batt"></span></div>
+  </div>
+
+  <div id="stage"></div>
+
+  <div id="dock"></div>
+
+  <div id="nav">
+    <button id="navBack" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+    </button>
+    <button id="navHome" title="Home"><div class="homepill"></div></button>
+    <button id="navSearch" title="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+    </button>
+  </div>
+
+</div></div>
+
+<script>
+/* ============ glyphs ============ */
+const G = {
+  rings:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>',
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
+  bars:'<path d="M5 20V11M12 20V4M19 20v-6"/>',
+  ledger:'<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 9h8M8 13h8M8 17h4"/>',
+  coin:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10h5M9.5 14h5"/>',
+  route:'<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H14a3.5 3.5 0 0 1 0 7h-4a3.5 3.5 0 0 0 0 7h5.5"/>',
+  seat:'<path d="M7 4h7a3 3 0 0 1 3 3v8H7z"/><path d="M4 15h16M6 19v-4M18 19v-4"/>',
+  chat:'<path d="M20 4H4v12h4v4l5-4h7z"/>',
+  node:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="2"/><circle cx="19" cy="17" r="2"/><circle cx="5" cy="17" r="2"/><path d="M12 9V6M14.3 13.6 17 16M9.7 13.6 7 16"/>',
+  home:'<path d="m3.5 11 8.5-7 8.5 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
+  pulse:'<path d="M3 12h4l2.5-7 4 14 2.5-7H21"/>',
+  book:'<path d="M4 4.5h6a2.5 2.5 0 0 1 2 2v13a2 2 0 0 0-2-1.5H4z"/><path d="M20 4.5h-6a2.5 2.5 0 0 0-2 2v13a2 2 0 0 1 2-1.5h6z"/>',
+  key:'<circle cx="8" cy="8" r="4.2"/><path d="m11 11 8 8M16 16l2.5-2.5M19 19l2-2"/>',
+  wave:'<path d="M3 15c3-7 5.5-7 8.5 0S17 22 21 15"/><path d="M3 8c3-7 5.5-7 8.5 0"/>',
+  spark:'<path d="M12 3v7M12 14v7M3 12h7M14 12h7"/><path d="m6.5 6.5 3 3M14.5 14.5l3 3M17.5 6.5l-3 3M9.5 14.5l-3 3"/>',
+  hex:'<path d="M12 3.2 20 8v8l-8 4.8L4 16V8z"/><path d="M12 9.5 15.5 12v3.5L12 17l-3.5-1.5V12z"/>',
+  tri:'<path d="M12 4 21 20H3z"/><path d="M12 11.5 16.5 20h-9z"/>',
+  stack:'<rect x="3.5" y="12.5" width="17" height="4.5" rx="1.5"/><rect x="5.5" y="7.5" width="13" height="4" rx="1.5"/><rect x="7.5" y="3" width="9" height="3.5" rx="1.5"/>',
+  cross:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>',
+  timber:'<rect x="3" y="7" width="18" height="4" rx="1.5"/><rect x="3" y="13" width="18" height="4" rx="1.5"/><path d="M7 7v4M16 13v4"/>',
+  scale:'<path d="M12 4v16M6 8h12"/><path d="M6 8 3 15h6zM18 8l-3 7h6z"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 12a6.5 6.5 0 0 0 13 0M12 18.5V21"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c4.5 5 4.5 12 0 17-4.5-5-4.5-12 0-17"/>',
+  cart:'<path d="M3 4h3l2.5 11h9L20 7H7"/><circle cx="10" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/>',
+  play:'<circle cx="12" cy="12" r="8.5"/><path d="m10 8.5 6 3.5-6 3.5z"/>',
+  compass:'<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5.5-5.5 2 2-5.5z"/>'
+};
+const C = { green:'#1E6E56', rust:'#B24A2E', indigo:'#3A55C4', gold:'#C6912A', violet:'#6B4FB0',
+  cyan:'#17798A', bronze:'#8A6836', magenta:'#A03A66', olive:'#4F7A22', slate:'#2F4358', wine:'#7A2F3F', teal:'#14796B' };
+
+/* ============ apps ============ */
+const APPS = [
+/* ---- dock ---- */
+{id:'nyumbani',n:'Nyumbani Hub',dock:1,c:C.green,g:'home',tag:'Verified identity and the trust layer under everything else',status:'Primary',alias:'County48 · NEXT OS · layer 8',
+ s:[{t:'What it is',d:'The registry and the thesis',l:[
+  'Verified-identity and trust-layer registry — the primary platform, framed as a "layer 8" obligation graph.',
+  'Strategic thesis: Kenya\'s missing coordination infrastructure, in the way M-Pesa was.',
+  'Three certified single-file HTML products share the NHDB v3 framework: the founding registry, NEXT OS PWA, and County48.',
+  'County48 (builder validation) pivoted out of the hub after diagnosing the registry as failing TERM — no immediate selfish payoff at L3.']},
+ {t:'The absolute rule',d:'Why vouches are never paid',l:[
+  'Gamifying or bounty-incentivising vouches converts social attestation into a wage and destroys the signal. This is non-negotiable.',
+  'Growth path: recruit 40 connectors, not 50,000 individuals. Vouching inside key infrastructure is an unused viral mechanic.',
+  'MVP revenue: peer-to-peer physical verification, priced against the cost of the loss.',
+  'Using the vouch graph to underwrite credit also degrades it — the graph is for verification and recourse only.']},
+ {t:'Shipping law',d:'GUARDRAIL, UNO, the ranker',l:[
+  'Governed by GUARDRAIL.md: the 2-Tap Rule, the 100ms Law, the No-Exit Mandate, plus dead-end, stutter and cognitive-load kill switches.',
+  'UNO standard: nothing ships unless it is market-competitive with apex social apps. Not an MVP — built for 50K users.',
+  'New features are scored by the guardrail ranker (lib/guardrail.ts, Admin → Ship Gate) before anything is called done.',
+  'Design system: "kanga and glass" v3. Delta-write cut signup bandwidth from ~45MB to 0.20MB.',
+  'Open blockers: payments (kill switch), tracker (dead end).']},
+ {t:'Borrowed trust',d:'The conclusion that reframed it',l:[
+  'Trust cannot be built directly by an unproven brand — it is borrowed from an already-trusted institution.',
+  'The fix: operate invisibly underneath a sacco, church or institution\'s own brand rather than being introduced as "Nyumbani" — the way credit bureaus sit unnamed behind banks.',
+  'Partnership outreach reframed around identity verification and fraud prevention as the defensible wedge.',
+  'Build history: Next.js v15–v32 — Zetu Zetu feed, The Floor reverse marketplace, two-surface profiles, communities, notifications. Pitch deck produced for Antler Kenya.']}]},
+
+{id:'ventr',n:'Ventr',dock:1,c:C.rust,g:'spark',tag:'Scream it out. Fix it. Get paid.',status:'Traction',alias:'Ventr.ai',
+ s:[{t:'The loop',d:'Vent → Signal → Market → Squad → Money',l:[
+  'A user says what is frustrating them. The community validates it into a signal.',
+  'The signal is read as a market gap, with the value shown.',
+  'A squad forms to fix it. The money is shared.',
+  'Thesis: Jua Kali operators — Mama Mbogas, artisans, nduthis — have skill but are invisible. Gen Z has the digital keys but no physical assets. Ventr marries the two into high-trust squads.']},
+ {t:'Engines',d:'The hidden layer that keeps the UI simple',l:[
+  'Background layers classify a vent\'s problem category, match location, and match similar people on the platform.',
+  'They surface in-platform solutions, opportunities and mass events without the user navigating for them.',
+  'A chatbot conversation layer sits on top, classifying and organising through those engines. Plus a dedicated opportunities page.',
+  'An "umbrella" layer above squads groups developers with similar tastes into shared entities they build under.']},
+ {t:'Where it stands',d:'The one with real users',l:[
+  'Already a good, popular, growing platform with real users — the one product in the portfolio with actual traction.',
+  'Moving from prototype to a real V1 production build, branded and SEO-targeted as Ventr.ai, sized for 50,000 users.',
+  'Considering institutional partnership with established Nairobi businesses — BYD, Jetour, 88 Nairobi — using Ventr\'s user data as the pitch asset.',
+  'One of the two products picked to start hunting customers and an audience with.']}]},
+
+{id:'day1',n:'Day1',dock:1,c:C.indigo,g:'chat',tag:'A chat app built for the "join our WhatsApp group" step',status:'Building',alias:'Baraza · @siix.alvin',
+ s:[{t:'The niche',d:'The terminal step of every funnel',l:[
+  'Websites and social posts all end in "join our WhatsApp group". That is the niche.',
+  'After joining, 100 members share nothing but interest in the business — they need categorising so the group makes sense to everyone.',
+  'Not WhatsApp, email or SOYO, but a hybrid that organises text to serve broadcast and inbox at once.',
+  'SOYO is WhatsApp niched down. This niches to business group chat and the financial close of a business process.']},
+ {t:'Broadcast and inboxing',d:'One easy half, one hard half',l:[
+  'Broadcast is the easy, general half.',
+  '"Inboxing" is the hard half: personalised clustering between the broadcaster and the different services members want.',
+  'Borrows Gmail\'s organising into sections — promotions, job opportunities, business processes.',
+  'The payoff: a growing broadcast community that also tells you what members want from you, so commerce goes to one section and consultation to another.']},
+ {t:'Lanes',d:'How members get sorted',l:[
+  'Buy now.','Consult with — could carry a subscription tier.','Buy later.','Join community.',
+  'Work — Slack-style internal team communication on the business process.',
+  'Job opportunities and announcements.','Partner with / sell to.']},
+ {t:'Rules',d:'Account and rejections',l:[
+  '@siix.alvin is the demo and base account: the only one allowed to create communities without signup or the 10-brought-in-users threshold, and the account that announces the roadmap.',
+  'A first prototype was rejected as "more POS, not a chat platform".',
+  'Related to the FindRight intent taxonomy and the Nyumbani identity layer.']}]},
+
+{id:'thesis',n:'Thesis',dock:1,c:C.gold,g:'compass',tag:'The sequencing rules the rest of this phone runs on',status:'System',alias:'product strategy',
+ s:[{t:'Proof before access',d:'The core sequencing rule',l:[
+  'An access product — network, registry, partnership play — is hard to sell before it has something to point to. You need access to already have some success.',
+  'So a solo-executable "proof product" must come first: one real, measurable outcome for one real party, no institutional cooperation needed to build it.',
+  'The first successful project is what earns institutional partnership access. Not the platform itself.',
+  'Nyumbani, Kyu and Sales.ai are all diagnosed as "standard"-type products — they only pay off at critical mass and are currently read by the market as small. The fix is to stop chasing two-sided liquidity at once and work from a fragmented position where demand and supply move in matched 1:1 pairs.']},
+ {t:'The badge',d:'A matrix project built purely for credibility',l:[
+  'A project built for money and the resulting credibility rather than personal conviction — it exists to start the partnership conversation: I built this, it performs this way, would you want to partner.',
+  'Nothing has been built yet that isn\'t personally cared about — which is why the marketing keeps forcing a sale of vision, and vision doesn\'t land because listeners lack context. The badge is what supplies that context.',
+  'Filter for picking projects: Kenyan institutions optimise for two things only — revenue stream or political popularity. An idea is worth building only if it puts a number on the institution\'s own scoreboard and opens a partnership conversation with a quick yes.']},
+ {t:'What counts as a good idea',d:'Three criteria, pure design',l:[
+  'Spreadability — how widely it gets used, directly or indirectly. The mobile phone beats space travel because more people use it.',
+  'It can be monopolised in a way that gives sustainable economic gains, and is monetarily profitable to the user, repeatably, without the founder in the loop.',
+  'It is genius enough to be surprising.',
+  'Google is monopolised by enhancing business. Anthropic\'s long-run angle is not yet visible from here.']},
+ {t:'Stage 1 and stage 2',d:'The part not yet tested',l:[
+  'Stage 1 is the trust-me-bro phase of building from scratch — the path to media, with virality as its intent.',
+  'Stage 2 needs a solid team and existing credibility. Strong at stage 2, never tested at stage 1.',
+  'Once a business crosses from stage 1 to stage 2 you never face stage 1 again, because the network is built.',
+  'Hence the obsession with simple, explainable software as the way across stage 1 — being recorded, especially while presenting, is loathed.']},
+ {t:'The 20 projects',d:'Rejecting pitches, not abandoning builds',l:[
+  'The role is customer zero, not engineer: instruct and judge, then sell on to customers two, three, sixty once a solution fully convinces.',
+  'The spread leverages limited resources — a cyclone, learning on the job. A bigger-TAM idea can justify a harder execution path over a smaller validated one.',
+  'The single thing being aimed at across all of them: the cheapest-to-run freemium service, in time, money and hustle, that still creates enough value. A cuddly entrance.',
+  'Now values a growing network over money at entry — monetisation isn\'t as hard as it looks while commerce exists, since businesses pay to be discovered and distribution is the constraint.',
+  'Overarching goal: formalised infrastructure for the Kenyan economy. Long-range plan: move capital from financial institutions to tech institutions, all of it before 2030.']}]},
+
+/* ---- page 1: building ---- */
+{id:'sahihi',n:'Sahihi',p:0,c:C.teal,g:'ledger',tag:'The deni book and the five-minute evening close',status:'Building',alias:'Kamakis Ledger · shop ledger',
+ s:[{t:'The close',d:'M-Pesa + cash + deni, reconciled',l:[
+  'A close-of-day ledger for shopkeepers on a dense trade spine: M-Pesa plus cash plus the credit book, reconciled in about five minutes.',
+  'Core aim: borrower and shop mutually agree on what was taken, with a record trail of mutual clearance — killing unconsolidated debts and disputes over what was picked.',
+  'Each shop owner sets their own lending rules: who gets credit and for what, customisable per shop.',
+  'Prefers "pesa ilivyotumika" over a daily profit figure. Inventory management is a separate business and stays out of scope.']},
+ {t:'Design law',d:'Build it like a calculator',l:[
+  'Inputs and outputs only. No lessons, no explanations, no many pages. The intended outcome is what the screen shows.',
+  'eTIMS invoicing and credit scoring stay latent capabilities the records could support — never designed toward, never assumed to interest the user.',
+  'Must replicate to Ruiru and translate to other Nairobi-area towns on the same premise.',
+  'Nothing that requires waiting on third parties. That is stalling.']},
+ {t:'What the 17 taught',d:'Pricing, not product',l:[
+  'Validated with 17 people who said they would easily use it. Pricing was the sticking point, not the product.',
+  'Lesson: let people sign up during the sale itself, and build B2B products that give a business full value independent of how many other users are on the platform.',
+  'The failure was showing the solution rather than selling it, with the paid part not built as a working piece of the demo.',
+  'Resumed as Sahihi at KES 1,499/month, revising the earlier ~500/month reports figure. Price to be tested conversationally: is this worth more than 1,500 a month, and if not, what should be added or solved instead.',
+  'Built around a standing excuse to meet or email 10 people a day.']}]},
+
+{id:'jicredit',n:'JiCredit',p:0,c:C.slate,g:'coin',tag:'Recurring collections for small billers, built to be cloned by a bank',status:'Active',alias:'biller product · Sidian',
+ s:[{t:'The product',d:'Same amount, every month',l:[
+  'A recurring-collections tool for small Kenyan billers — schools, caretakers, small ISPs, gyms — whose payers pay the same amount monthly.',
+  'Deliberately designed to be clonable by the bank partner. A product a bank could copy is a product you can talk about openly.',
+  'It must need a bank\'s API, and must solve something a bank\'s SME desk is already hunting for.',
+  'Sahihi was set aside temporarily to run this.']},
+ {t:'Why Sidian',d:'Pick the institution that is behind',l:[
+  'A startup\'s biggest mark of success is helping a struggling establishment compete.',
+  'An institution winning in SME sees you as competition. One that is behind sees you as a partner — and that is the smoother path to proving yourself.',
+  'Starting with Sidian Bank, with a report-back planned on how the approach goes.',
+  'Framed as an internship for himself: the point is learning what people really mean by sales.']}]},
+
+{id:'tenpartners',n:'10partners',p:0,c:C.bronze,g:'scale',tag:'M-Pesa statements turned into lender-ready credit files',status:'Building',alias:'credit file · Kipimo',
+ s:[{t:'The real question',d:'Not "set up my shop"',l:[
+  'Doing tech sales to Kenyan businesses, the question that actually comes back is not "can you set up my shop" — it is how to get capital to start, expand or hire.',
+  'That reads as a market affordance problem — money in people\'s pockets — rather than a discovery problem. Online presence and page rank fail to convert for that reason.',
+  'Mogo gets quoted by customers as exploitative, which reads as: they are the only ones willing to take the risk.',
+  'M-KOPA is directionally right — lending on things tied to profits or to the business itself.']},
+ {t:'The spec',d:'Statement in, underwriting out',l:[
+  'Take a 6–12 month M-Pesa statement.',
+  'Turn it into real monthly value and its volatility, for underwriters.',
+  'Produce a report of the business\'s qualifications.',
+  'Help the business make proposals — especially on restocking.']},
+ {t:'Wholesaler-side first',d:'Where the records actually are',l:[
+  'The wholesaler angle makes more sense than the SME-facing version: a wholesaler already knows which dukas are worth the risk, just from how they sell.',
+  'Take orders, deliveries and cost; output per-shop columns and CSV plus daily sales and payment mode, with a field team checking deliveries against stock-out.',
+  'The reconciliation is the wholesaler\'s incentive. The per-shop record is the credit file.',
+  'In-store POS is solved, but delivery crews still write orders, payment modes, collections and balances by hand — per-shop ledgers, split cash/M-Pesa collections, previous-balance clearance.',
+  'Regulation is secondary here: build the solution, follow up on compliance once the market shows the need.',
+  'The cross-lender version is 10partners — to be presented to Metropol, banks and other stakeholders, signing its first 10 founding partners.']}]},
+
+{id:'greengold',n:'Green Gold',p:0,c:C.olive,g:'play',tag:'Land of opportunity — one poster, everyone else in the comments',status:'28-day build',alias:'Nthaka cia Koome · @sharpboy001',
+ s:[{t:'The format',d:'Admin posts, everyone participates',l:[
+  'Only the admin handle @sharpboy001 posts short video and photo "status" posts with polls. Everyone else participates in the comments.',
+  'Renamed from Silk Road ("Journey to Singapore") to Nthaka cia Koome, then to Green Gold ("land of opportunity") — the Silk Road name dropped partly over the darknet-market association.',
+  'Access is gated by a key: without one you can view posts but cannot vote, comment, set up a shop, or enter the marketplace.']},
+ {t:'Marketplace rules',d:'Matching only, no escrow',l:[
+  'Sellers pay KES 2,000/month to be visible.',
+  'No escrow, no checkout, no cut of sales. The platform matches buyers and sellers and displays contacts — WhatsApp and phone — so they deal on their own terms.',
+  'Non-payment must lock a seller out of visibility.',
+  'Extra revenue from adverts and event promotion.']},
+ {t:'Events',d:'Hosted by one handle',l:[
+  'Events are hosted only by @sharpboy001. Anyone wanting to host messages him and terms are agreed privately.',
+  'Boxing and fight nights are included under events.',
+  'This week: apply for an M-Pesa Paybill and settle the domain name.']}]},
+
+{id:'kyama',n:'Kyama',p:0,c:C.violet,g:'stack',tag:'Savings tins for the dead months, instead of a punitive loan app',status:'Next up',alias:'sinking fund',
+ s:[{t:'The tins',d:'Goal-based buckets off M-Pesa activity',l:[
+  'Goal-based savings buckets for Kenyan SME owners: tax, stock, repairs, emergency, dead months.',
+  'Funded by small automatic saves off M-Pesa activity.',
+  'Positioned as replacing punitive loan apps with savings for emergencies. Offered in both English and Kiswahili.',
+  'Language kept in plain layman scenarios, never financial terms.']},
+ {t:'The Chumz path',d:'Borrowed institutional trust',l:[
+  'Route funds to a licensed fund manager, pursue an ISPP-style licence and the CMA Regulatory Sandbox, and use the CMA badge as borrowed trust.',
+  'AI makes buildout far faster than when Chumz started, so the sandbox path can be accelerated.',
+  'Private credit is more profitable, but the sinking fund is accepted as the route in.',
+  'The "get to the podium" project: the vehicle for getting acquainted with business process, networks, capital and users — starting with a landing page, early signups and conversations.']}]},
+
+{id:'cancer',n:'Cancer Compute',p:0,c:C.wine,g:'cross',tag:'Cancer as a computation problem, not only a medical one',status:'Campaign',alias:'WHX · cancer board',
+ s:[{t:'The position',d:'Farming, not hunting',l:[
+  'An awareness campaign positioning cancer as not only a medical problem but a computation problem — joining engineering, medicine and tech in Kenya.',
+  'The role is the infrastructure around early detection: regulation, machine usage, accurate software, and a culture that welcomes checkups. Clinical work stays with doctors.',
+  'A shareable public board segmenting researchers, help, news, tools and funds.',
+  'A WHX health meeting has been applied for — the platform showcases the work there and collects people\'s reviews.']}]},
+
+{id:'routebook',n:'Route Book',p:0,c:C.cyan,g:'route',tag:'The phone that replaces the notebook at the shop door',status:'Building',alias:'van sales · margin console',
+ s:[{t:'The premise',d:'Last mile is the whole product',l:[
+  'Wholesaler-to-shop last-mile distribution is the whole product: a phone route book replacing the paper notebook van crews write in at the shop door.',
+  'Two jobs for the wholesaler: cut cost lost on deliveries and logistics, and increase revenue.',
+  'Jemaak is the worked example — sources bulk from manufacturers, houses storage and inventory, runs lorries to last-mile shops buying smaller quantities.']},
+ {t:'Scope',d:'Catalogues, lorries, returns',l:[
+  'Shop categories — hardware, pharmaceuticals, hotels and so on — with per-wholesaler custom catalogues.',
+  'Each wholesaler on their own space, seeing only their own data.',
+  'Per-lorry stock monitoring and returned-stock reconciliation.',
+  'This is where the credit history behind 10partners comes from.']},
+ {t:'The manufacturer layer',d:'What sits on top',l:[
+  'Manufacturers need distributor-level knowledge of which shops stock their products.',
+  'And a way to reach, or hear from, end users through the distributor.']}]},
+
+{id:'ekamagera',n:'E_kamagera',p:0,c:C.rust,g:'seat',tag:'Book the seat from home instead of waiting for the car to fill',status:'Building',alias:'E_town · seat booking',
+ s:[{t:'The wait',d:'What actually breaks',l:[
+  'Long-distance intercity travel — Nairobi–Mombasa. Vehicles leave only when they fill, so passengers wait hours at the stage with no guaranteed departure time.',
+  'Seat-and-place booking across vehicle classes: 5-seater, 14, 16, minibuses, bus coaches — every seat individually allocated.',
+  'WhatsApp confirmation once a vehicle is assigned or present. Monetised by adding KES 50 on top of the fare.']},
+ {t:'Trip rules',d:'Set per departure',l:[
+  'Locations, price, seats, assigned vehicle plate, SACCO, driver name and pick-up contact — all set dynamically per departure.',
+  'No seat held without payment.',
+  'Cancellation refunds 70% of the fare; 30% is kept as the penalty.',
+  'Shown to matatu owners first. NTSA later.']},
+ {t:'Four sides',d:'One flippable product',l:[
+  'Long-distance passenger seat pooling.',
+  'Internal backhaul cargo matching for lorries, so trucks don\'t return empty — Nakuru–Nairobi–Mombasa.',
+  'Carpooled event transport at organiser-set prices — Nganya Fest, Nairobi–Naivasha.',
+  'SACCO-friendly ride booking plus in-town deliveries. The SACCO is named E_town.',
+  'Coordination is the biggest hurdle: which carrier is where, tonnage pricing, and who has bulky goods like timber or food to move.']}]},
+
+{id:'septa',n:'Septa',p:0,c:C.indigo,g:'grid',tag:'1,000 numbered verified seats across six data-work sectors',status:'Revived',alias:'talent marketplace',
+ s:[{t:'The seats',d:'Numbered and verified',l:[
+  'A Kenyan talent marketplace: 1,000 numbered verified seats, six data-work sectors, 1,100 KES per 4-hour block.',
+  'Single-file HTML app built, then set aside after finding insufficient immediate visible value. Now revived as the project best suited to the first-10-customers push.',
+  'Six lanes: BPO/AI data services, fintech and mobile money agents, agritech farmer data, private healthcare data, e-commerce logistics data, retail inventory data.']},
+ {t:'First outreach',d:'Five firms, one reply',l:[
+  'First calls ran to five Kenyan BPO and annotation firms on the bench-capacity premise.',
+  'Only Adept responded — and said they have never lost a contract to overflow.',
+  'The read: the solution isn\'t wrong, just not now. Vacancies are hard to find and worker supply is abundant.']}]},
+
+{id:'salesai',n:'Sales.ai',p:0,c:C.gold,g:'bars',tag:'Discoverable → organised → AI-operable, sold as one transformation',status:'Validating',alias:'AI-Ready SME',
+ s:[{t:'The ladder',d:'Each level includes the ones below',l:[
+  'Free: a self-serve readiness check with a percentage score, a loss estimate, and an open free consultation the customer books — where they can raise anything they think tech could fix.',
+  'DISCOVER — KSh 50,000: discoverability, search, social, structured business data.',
+  'OPERATE — KSh 100,000: POS, inventory, customers, the business data layer.',
+  'ACT — KSh 150,000: AI extension, sales/customer/ops/management agents, integrations, AI Business Profile.',
+  'Primitives framed as DISCOVER → KNOW → ACT, not social media → POS → AI.']},
+ {t:'Validation',d:'Ten businesses, one question',l:[
+  'First MVP built as a single-page interactive prototype. Flow: business → AI opportunity scan → personalised opportunity → working AI extension demo → implementation tier.',
+  'The plan is to put it in front of 10 real Kenyan businesses and see if any say "yes, build this for my business" — stronger validation than another workflow prototype.',
+  'The current friction: it is hard to convene anyone locally even for a free check.']}]},
+
+{id:'apartments',n:'Apartments',p:0,c:C.teal,g:'stack',tag:'Rooms, knocks, buildings, umbrellas — service delivery by level',status:'Spec',alias:'rooms and knocks · domains',
+ s:[{t:'The layers',d:'Room up to city',l:[
+  'Room — an individual\'s own space, personal bookings, a direct line to service deliveries.',
+  'Knocks — neighbours asking and inviting.',
+  'Apartment — a whole building. Umbrella — one owner\'s several buildings. Then area/hood, then city.',
+  'Abstraction stays relevant to the user, so neighbours can plan without the whole city seeing, while still able to talk to city layers.']},
+ {t:'Domains',d:'Who owns what',l:[
+  'Room domain owner, knock domain owner, service delivery domain owner, umbrella domain owner, platform owner for area/hood and city.',
+  'An umbrella owner should see their whole umbrella\'s vacancies and reviews like they own that domain.',
+  'Access rule: a tenant reaches their own room, service providers accepted by their building, opted-in members of that building, and their 5 most adjacent neighbours. An owner of 5 buildings holds that umbrella.',
+  'Always leave the option to opt out.']},
+ {t:'What it carries',d:'Services layered on a residence',l:[
+  'Bookings, pest control, errands, small sales, meal prepping, transport, announcements — plus a place for members of the same building to connect, vote and speak on issues.',
+  'The essence: easier service delivery, including transport, where the user knows which level — neighbour, area, or general provider — is offering the solution. That is what makes ticketing interesting.',
+  'It should resolve real estate and house hunting with data showing where the problem lies.',
+  'The relationship between the apartment and the user is what makes or breaks this one. Pilot scope: Nairobi only.']},
+ {t:'Build requirements',d:'Three organs, one app',l:[
+  'Link owners\' existing spreadsheets.',
+  'Let owners set up rooms matching their actual building, from flooring to rooms.',
+  'Room ID updates with the current client registration, so spend, rent and deposits can be monitored and payments processed.',
+  'Onboarding, dashboards and level-difference communications are three organs of one thing — flowing seamlessly in one app, without wordiness or too many tabs, with auto sign-ups.']}]},
+
+{id:'ruiru',n:'Ruiru Studios',p:0,c:C.olive,g:'home',tag:'Let people specify the building before it is built',status:'Concept + tooling',alias:'co-design survey · rent router',
+ s:[{t:'The wedge',d:'Co-design',l:[
+  'A housing development on the Thika Road corridor: studios and one-bedrooms for students, workers and small business owners rather than families.',
+  'Kenyans never get to specify the rental homes they live in. The wedge is letting prospective residents co-design the building before it goes up.',
+  'Positioned as a trailer to Nyumbani Hub. An optional residents\' savings circle — the "house circle" — is where verification runs, unbranded.',
+  'The goal is institutional partnership with developers, banks and universities as hostel providers. Not owning the development.']},
+ {t:'What is included',d:'Fixed, votable, split out',l:[
+  'Fixed in rent originally: borehole water, wifi, in-house repairs, parking, backup power, shuttle to CBD and Westlands.',
+  'Votable extras: hub/work space, podcast and media room, gym, rooftop.',
+  'Revised structure: amenities split out of rent — water, wifi and garbage sold as platform packages; transport included and discounted at about KES 60 against the usual 100 to town; event hosting paid separately by whoever books it.']},
+ {t:'Numbers',d:'Rents and the revised scheme',l:[
+  'Original targets: studio KES 18,000, one-bedroom KES 25,000, all-inclusive.',
+  'Revised Sept 2026: all-studio, rental not sale — KES 13,000 per bed shared, KES 24,000 for a solo let.',
+  'An 11-floor, ~150-unit block with 4–5 buses was considered before settling on rental.',
+  'Services costed independently, with buses run sacco-style on public routes between resident runs so they trade at a surplus instead of sitting as a cost line.',
+  'A startup school in the December–January student void fits the building\'s empty months.',
+  'Built: co-design survey page, partner demand dashboard, rent-router unit-economics model — Supabase storage, Formspree email.']}]},
+
+/* ---- page 2: portfolio ---- */
+{id:'findright',n:'FindRight',p:1,c:C.magenta,g:'node',tag:'An intent network, not a directory',status:'Portfolio',alias:'FindRight Pro',
+ s:[{t:'How it matches',d:'One engine, all relationship types',l:[
+  'Participants describe what they can provide, what they need, terms and evidence. One engine matches across buyers, shops, creators, marketers, suppliers, workforce, partners and investors.',
+  'Ecosystem rank is deliberately outcome-weighted, not spend-weighted: matches 30%, verified outcomes 30%, feedback 20%, profile quality and response 10%, recency 10%.',
+  'Pricing: free listing tier, plus FindRight Pro at $100/month — demand intelligence, market gaps, review intelligence, business site, integrations, AI advisor.',
+  'v1 stack thesis: Next.js/TypeScript, Node API, Python AI services, PostgreSQL + pgvector, M-Pesa and card billing. A browser-based single-file MVP came first.']}]},
+
+{id:'kyu',n:'Kyu',p:1,c:C.slate,g:'hex',tag:'Connect through what you are trying to make happen',status:'Paused',alias:'Intent · Kata',
+ s:[{t:'Three primitives',d:'Intent, Kata, Kyu',l:[
+  'Intent — what I want to make happen.',
+  'Kata — the people participating in that specific journey.',
+  'Kyu — the reputation level earned from repeatedly making things happen through people.',
+  'Meant to resolve lead generation differently from Clay and similar tools. One customer so far.']},
+ {t:'Design questions',d:'What it has to answer',l:[
+  'Does it resolve the user\'s immediate selfish want? Does it give the user money? Is there a clear path to monetisation, users, discoverability and community?',
+  'A conversational helper trained on every detail of the product, to make onboarding seamless.',
+  'Hard work hidden in background engines. A free tier powerful enough that paid versions are craved.',
+  'Paused Aug 2026 — a hard problem to get into without good teams.']}]},
+
+{id:'arena',n:'Arena',p:1,c:C.rust,g:'tri',tag:'Bet against each other, not against a house',status:'Queued',alias:'Arena Platform',
+ s:[{t:'The marketplace',d:'P2P prediction for Kenya',l:[
+  'Users bet against each other on brackets, polls and live events rather than against a house. The platform takes a rake.',
+  'Architecture spec v1.0 (Aug 2026): dual currency — play credits and Arena credits on M-Pesa — brackets, channels, P2P pools, jackpots, leagues, a Crash game, and an LLM copilot.',
+  'Complexity compounds into a better solution over time. Capital is the hard part at entry. Integrating different systems mirrors how people actually use tools to make money.',
+  'Not being built personally — a working architecture left for team 6iix to implement.']}]},
+
+{id:'chokwood',n:'Chokwood',p:1,c:C.bronze,g:'key',tag:'A book club where key-cutting is a ceremony',status:'Built',alias:'Kaya · Stall · Broadcast',
+ s:[{t:'The app',d:'Theatrical by design',l:[
+  'A Nairobi book club app with key-holder identity: Kaya discussion groups of 7–15 members, a Stall marketplace, and a Broadcast podcast surface.',
+  'Slot-capped with queue-promoted overflow; database-level clash prevention via an exclusion constraint.',
+  'Streak-based ranking with tunable weights.',
+  'Ships empty until the steward populates it. Key-cutting is a dramatic full-screen ceremony by design.',
+  'React on Next.js, Supabase, Caddy, Hetzner.']}]},
+
+{id:'soko',n:'Soko Sovereign',p:1,c:C.violet,g:'grid',tag:'Chama logic meets double-entry, at chess depth',status:'Built',alias:'MTAANI · SOKO · SOVEREIGN',
+ s:[{t:'The game',d:'Rebuilt after the bots broke it',l:[
+  'A multiplayer browser financial-strategy game synthesising Western accounting and the Kenyan chama model, built to chess/AlphaGo tactical depth.',
+  'v2 was rebuilt after ~40,000 bot simulations revealed severe balance failures in v1.',
+  'A genuine non-dominant strategy landscape validated across three difficulty tiers: MTAANI, SOKO, SOVEREIGN.',
+  'Deployed as a standalone HTML file to the GitHub Pages repo, with a config.js tuning pattern.']}]},
+
+{id:'swn',n:'Shop with Nairobi',p:1,c:C.green,g:'cart',tag:'Six trade categories, one trust-based identity',status:'Phase 1',alias:'SWN',
+ s:[{t:'Where it stands',d:'Built, with three gaps',l:[
+  'A multi-vendor e-commerce platform with six Nairobi trade categories and a trust-based identity system — Nyumbani Hub.',
+  'Phase 1 build completed: 269 passing tests, benchmark score 4.5/5.',
+  'Three gaps remain: product photos, live delivery tracking, and the Postgres migration.']}]},
+
+{id:'omega',n:'Ω PAY',p:1,c:C.gold,g:'globe',tag:'US crypto in, Kenyan fiat out',status:'Roadmapped',alias:'Omega Pay · 2027',
+ s:[{t:'The corridor',d:'Where the defensibility sits',l:[
+  'A US crypto-to-Kenya fiat cross-border corridor. OMEGA_PAY_CORRIDOR_ROADMAP.md sets out six architecture layers and a 540-day phased plan.',
+  'The defensible wedge is Kenyan last-mile distribution and the Nyumbani trust graph for recipient verification — not US crypto entry.',
+  'Warning held: using the vouch graph to underwrite credit degrades its signal. The graph is reserved for verification and recourse.',
+  'Brand finalised: gold Ω mark, Anton typeface, spoken "Omega Pay".']},
+ {t:'2027',d:'The AFCON companion app',l:[
+  'A related app for AFCON 2027 and the KPL: ticketing, fan convoys, a creator bounty board, the La Masia Mtaani scouting registry, and Move/Stay/Culture tabs.',
+  'QR modals encode deep links to the Nyumbani founding registry with ?src=2027&ref= attribution.']}]},
+
+{id:'podcast',n:'Employer Podcast',p:1,c:C.wine,g:'mic',tag:'The guest is the employer. The role is announced, never the guest.',status:'Sleeping on it',alias:'job podcast · podmatch',
+ s:[{t:'Format',d:'What gets said out loud',l:[
+  'Guests are employers with a job offering. The role is announced ahead of the episode so listeners know which cross-breed is coming.',
+  'The employer says out loud what the work is, what it pays, what disqualifies an applicant, and what he is tired of seeing in applications.',
+  'Announce the role before the episode. Never the guest.']},
+ {t:'Money rules',d:'Non-negotiable',l:[
+  'The employer always pays.','Never charge jobseekers.','Sponsorship is fine.',
+  'Guest-pays-for-placement is forbidden.','Bounties or payment for vouching are an absolute no.']},
+ {t:'Constraints and the test',d:'Before any build',l:[
+  'Nothing that waits on third parties to start — that is stalling.',
+  'Value must exist for user one. No two-sided cold start.',
+  'The close must be a working part of any demo. The last product got 17 who said they\'d use it and zero paid.',
+  'No format needing him on camera or as a personality. The signup architecture would be paid out to someone else to build.',
+  'First test: find one employer currently hiring, record about 40 minutes, publish, count applications.']}]},
+
+{id:'outcome',n:'Outcome',p:1,c:C.cyan,g:'spark',tag:'Agentic coding that sells the outcome, not the output',status:'Concept',alias:'outcome-first coding',
+ s:[{t:'The pitch',d:'Validate, then code',l:[
+  'An agentic coding tool that moves from output-first to outcome-first: it starts with market validation, gives the builder a platform to talk to users, customers and leads, and only codes the solution once the idea is validated.',
+  'Positioned to compete with and beat Lovable and Bolt.',
+  'Sequencing: solve tech sales first — organise and validate the idea from a network pool, something akin to WhatsApp groups that grows — then the agentic coding.',
+  'So the platform resolves sales and coding as one thing rather than two separate entities.']}]},
+
+{id:'maktaba',n:'Maktaba',p:1,c:C.teal,g:'book',tag:'Language evaluation for East African languages',status:'Scoped',alias:'Milestones · Mizani',
+ s:[{t:'The lab',d:'Narrowed to language',l:[
+  'An AI evaluation venture aimed at the RLHF and AI-training data market in Kenya.',
+  'Scope narrowed to language evaluation only, for East African languages.',
+  'Named Maktaba — renamed from Milestones, and before that Mizani.',
+  'Kitenzi cohort graduates would be certified into this annotation work.']}]},
+
+{id:'resonit',n:'Resonit',p:1,c:C.indigo,g:'rings',tag:'AI training, a startup school and a legal clinic as one institution',status:'Open proposal',alias:'Resonit',
+ s:[{t:'Three things at once',d:'And who it is addressed to',l:[
+  'AI data training, a startup school, and legal aid as a training lab — combined into one institution.',
+  'Scope covers what startups need legally: IP protection, representation, partnership papers, alongside the AI training work.',
+  'Originally framed with a VC, KCA as campus partner and a law firm. The named funders have since been dropped.',
+  'Now left as an open suggestion to any university — a way to formalise AI training work and push regulation.']}]},
+
+{id:'kitenzi',n:'Kitenzi.AI',p:1,c:C.bronze,g:'scale',tag:'A Nairobi AI data training school — now a networking play',status:'Stepped back',alias:'AI data training school',
+ s:[{t:'The cohort',d:'Numbers set',l:[
+  'Training runs 3 months at KES 60,000 per trainee.',
+  'First batch: a cohort of 60, run in partnership with a campus.',
+  'Graduates certified into Maktaba annotation work, pitched at labs like Meta, Google, Kimi, OpenAI and Anthropic.']},
+ {t:'Why it moved',d:'Hard sell, foreign, stalling',l:[
+  'Picked first as the convergence point — tech sales, AI, coding and blockchain, a modern-day Andela or ALX.',
+  'Since stepped back: the school is a hard sell, and only what has actually been succeeded at should be taught.',
+  'Treated now as a networking play rather than the main business.',
+  'The AI-data-training work still happens eventually — just not as the first business. It feels foreign, and requires too much third-party dependency, which means stalling.']}]},
+
+/* ---- page 3: field & tools ---- */
+{id:'timber',n:'Timber Calc',p:2,c:C.olive,g:'timber',tag:'Bodyfoot volume and pricing — the most-used thing built so far',status:'Live',alias:'timber-calc',
+ s:[{t:'Shipped',d:'And actually used',l:[
+  'A bodyfoot-measurement timber volume and pricing web app, deployed to GitHub Pages at alvinmutuma2.github.io/timber-calc.',
+  'Analytics dashboard, batch history, printable receipts.',
+  'The most-used thing created so far.']}]},
+
+{id:'interiors',n:'Interiors',p:2,c:C.bronze,g:'home',tag:'Kitchens, wardrobes, cabinets, gypsum, tiling, furniture',status:'Trading',alias:'joinery · timber business',
+ s:[{t:'The business',d:'Everything related to timber and homes',l:[
+  'Interior design and joinery: kitchen fittings, wardrobes, cabinets, gypsum, wood, tilings and furniture.',
+  'Timber sales are part of the same business.',
+  'Work won through bookings, consultations and hunting contracts — with a discoverable landing page, social ads, Google SEO, and image and video showcasing.']}]},
+
+{id:'daftari',n:'Daftari',p:2,c:C.green,g:'coin',tag:'Sharia-compliant fintech — takaful prototype',status:'Prototype',alias:'takaful',
+ s:[{t:'Built',d:'Eight screens',l:[
+  'A Sharia-compliant fintech concept.',
+  'Takaful prototype built across 8 screens, with tabarru / wakala / PIA bifurcation.']}]},
+
+{id:'ilani',n:'ILANI',p:2,c:C.magenta,g:'bars',tag:'Four-round campus data collection with a gated console',status:'Built',alias:'ILANI.jsx',
+ s:[{t:'The rounds',d:'What it collects',l:[
+  'Priority ranking. A political attitudes A/B test. A knowledge round. An advice-judging round.',
+  'Password-gated console, two-axis polity analysis, CSV exports.']}]},
+
+{id:'bench',n:'Bench',p:2,c:C.slate,g:'pulse',tag:'Evaluations, audits and the honest scorecards',status:'Log',alias:'benchmarks · audits',
+ s:[{t:'Nyumbani benchmark',d:'Kenyan-context evaluation',l:[
+  'A 200-item Kenyan-context AI evaluation benchmark brief, with a contributor job description drafted.']},
+ {t:'Maths audits',d:'What held up',l:[
+  'Mathematical audit of the "Alvinian School of Thought" frameworks: the Ramanujan constant problem solved at 9/10; the Moser circle problem scored 100/100 — correctly identifying 31 and 256 as formula outputs, and 256 = 2⁸ as a coincidental mirage.',
+  'The finding: correct derivations do the work regardless of "sovereign" dialect.',
+  'Absolute Resolver — unified-formula documents claiming twenty open problems solved. Rigorous code-based testing found zero solved. An honest scorecard is maintained.']},
+ {t:'Gold trading',d:'21 tests, no edge',l:[
+  'A 21-test systematic study concluding no edge exists. The optional-stopping theorem was verified empirically.',
+  'Out of it, M-Pesa alternative credit scoring came out as the strongest, most actionable project concept.']}]},
+
+{id:'agentgraph',n:'AgentGRAPH',p:2,c:C.violet,g:'node',tag:'A verifiable trust layer for the AI agent economy',status:'Running',alias:'phasegraph · Koome',
+ s:[{t:'State',d:'Backend up',l:[
+  'FastAPI backend — a verifiable trust layer for the AI agent economy — debugged to running state.',
+  'Extended sessions on LLM internals, and a speculative "Koome" hybrid architecture.']}]},
+
+{id:'cv',n:'Speedrun',p:2,c:C.gold,g:'play',tag:'The a16z application and what it chose to leave out',status:'Submitted',alias:'a16z speedrun · CV',
+ s:[{t:'The application',d:'Two artefacts',l:[
+  'Applied to the a16z speedrun accelerator.',
+  'Produced a creative interactive HTML CV and a standard one-page PDF.',
+  'Framed around marketing and distribution work, with AI efficiency as the sole stated proficiency and no education listed.']}]},
+
+{id:'system',n:'System',p:2,c:C.slate,g:'rings',tag:'Your data, the export file, and how to hand this OS on',status:'System',alias:'data and sharing',
+ s:[{t:'Where things live',d:'Storage and handover',l:[
+  'Everything typed into the working apps is stored on this device only. Nothing is sent anywhere.',
+  'Export writes a JSON file you can keep, back up, or move onto another phone.',
+  'The OS itself is one HTML file. Share it and the other person opens an empty copy of their own.']}]}
+];
+
+/* ============ portable storage + working apps ============ */
+const SEED = {
+  timber:{rate:120, w:'', t:'', l:'', p:1, items:[]},
+  sahihi:{setup:true, kind:'deni', lang:'sw', lines:[], sel:null, nm:'', ph:'', a:'', x:'', k:'d', cw:'sms', sms:'', cd:''},
+  routebook:{sh:'', gv:'', pc:'', pm:'', rt:'', pb:'', stops:[]},
+  kyama:{rate:5, sale:'', wt:'', wa:'', tins:[
+    {n:'Kodi / tax', w:3, b:0},{n:'Stock', w:4, b:0},{n:'Matengenezo / repairs', w:1, b:0},
+    {n:'Dharura / emergency', w:1, b:0},{n:'Miezi mibaya / dead months', w:1, b:0}]},
+  ekamagera:{cls:14, fare:1500, taken:[], log:[]},
+  nyumbani:{tab:'join', nm:'',ph:'',ct:'',tr:'',vn:'',vp:'', gf:'',gn:'',gh:'', me:null, members:[], vouches:[]},
+  day1:{cn:'',cname:'',msg:'',sel:[],lane:'All',mn:'',ml:'Buy now',members:[],posts:[]},
+  jicredit:{scr:'types', type:null, step:1, biz:'', cnt:12, amt:'', day:'5', acct:'', payers:[], hist:null, msgi:0},
+  tenpartners:{biz:'',v:'',vals:[]},
+  system:{endpoint:'', wa:'254759610468'}
+};
+const DB = {
+  d:{},
+  get(k){ if(!this.d[k]) this.d[k]=JSON.parse(JSON.stringify(SEED[k]||{})); return this.d[k]; },
+  async load(){
+    let raw=null;
+    try{ if(window.storage){ const r=await window.storage.get('portable-os'); raw=r&&r.value; } }catch(e){}
+    if(!raw){ try{ raw=localStorage.getItem('portable-os'); }catch(e){} }
+    if(raw){ try{ this.d=JSON.parse(raw); }catch(e){ this.d={}; } }
+  },
+  async save(){
+    const raw=JSON.stringify(this.d);
+    try{ if(window.storage){ await window.storage.set('portable-os', raw); return; } }catch(e){}
+    try{ localStorage.setItem('portable-os', raw); }catch(e){}
+  }
+};
+const N = v => { const x=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,'')); return isNaN(x)?0:x; };
+const KS = n => 'KES ' + Math.round(n).toLocaleString('en-KE');
+const F2 = n => (Math.round(n*100)/100).toLocaleString('en-KE');
+const ESC = s => String(s).replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const today = () => new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+function download(name, text, type){
+  try{
+    const b=new Blob([text],{type:type||'text/plain'});
+    const u=URL.createObjectURL(b);
+    const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a);
+    a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),3000);
+  }catch(e){ alert('Download blocked here. Open the file outside the app to save.'); }
+}
+const COUNTIES=['Nairobi','Kiambu','Nakuru','Mombasa','Kisumu','Uasin Gishu','Machakos','Kajiado','Meru','Nyeri','Murang\'a','Kirinyaga','Embu','Tharaka-Nithi','Kitui','Makueni','Laikipia','Nyandarua','Kericho','Bomet','Narok','Kakamega','Bungoma','Busia','Vihiga','Siaya','Homa Bay','Migori','Kisii','Nyamira','Trans Nzoia','Nandi','Baringo','Elgeyo-Marakwet','West Pokot','Samburu','Turkana','Isiolo','Marsabit','Mandera','Wajir','Garissa','Tana River','Lamu','Kilifi','Kwale','Taita-Taveta'];
+const LANES=['Buy now','Consult','Buy later','Community','Work','Jobs','Partner'];
+function wa(num, text){
+  let n=String(num||'').replace(/[^0-9]/g,'');
+  if(n.charAt(0)==='0') n='254'+n.slice(1);
+  if(n.length<9){ alert('No phone number saved for that.'); return; }
+  try{ window.open('https://wa.me/'+n+'?text='+encodeURIComponent(text),'_blank'); }
+  catch(e){ alert('Open WhatsApp and send to '+n); }
+}
+function postSignup(m){
+  const url=(DB.get('system').endpoint||'').trim(); if(!url) return;
+  try{ fetch(url,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(m)}).catch(()=>{}); }catch(e){}
+}
+function bindVals(root, st, save, keys){
+  keys.forEach(k=>{
+    const el = root.querySelector('#f_'+k);
+    if(el) el.addEventListener('input', ()=>{ st[k]=el.value; save(); });
+  });
+}
+
+/* ================= SAHIHI — the real build ================= */
+const SK = {
+  deni:{ sw:{n:'Deni',who:'Mteja',owe:'Amechukua',pay:'Amelipa',ph:'Chai, mkate, sukari'},
+         en:{n:'Debts',who:'Customer',owe:'Took',pay:'Paid',ph:'Tea, bread, sugar'} },
+  kodi:{ sw:{n:'Kodi',who:'Mpangaji',owe:'Kodi ya mwezi',pay:'Amelipa',ph:'Kodi ya Septemba'},
+         en:{n:'Rent',who:'Tenant',owe:'Rent due',pay:'Paid',ph:'September rent'} },
+  stock:{ sw:{n:'Stock',who:'Msambazaji',owe:'Nimechukua',pay:'Nimelipa',ph:'Mifuko 10 ya unga'},
+         en:{n:'Supplier',who:'Supplier',owe:'I took',pay:'I paid',ph:'10 bags of flour'} },
+  mshahara:{ sw:{n:'Mshahara',who:'Mfanyakazi',owe:'Anadai',pay:'Nimelipa',ph:'Wiki hii'},
+         en:{n:'Wages',who:'Worker',owe:'Owed',pay:'I paid',ph:'This week'} }
+};
+const SU = {
+  sw:{mine:'Kwa maneno yangu',agreed:'Mmekubaliana',names:'Majina',add:'Ongeza mtu',write:'Andika',
+      amount:'Kiasi',what:'Ni ya nini',save:'Hifadhi',name:'Jina',phone:'Simu',secret:'Namba yake',
+      clear:'Kubaliana',sms:'Bandika SMS ya M-Pesa',code:'Amesema namba yake',dispute:'Tuma orodha ya mzozo',
+      report:'Ripoti',backup:'Nakala',restore:'Rudisha',strike:'Futa',struck:'imefutwa',locked:'M-Pesa',
+      none:'Hakuna kitu bado.',grey:'bado hamjakubaliana',black:'mmekubaliana',open:'Wanaodaiwa',
+      setupQ:'Hii kitabu ni ya nini?',go:'Anza'},
+  en:{mine:'In my words',agreed:'Both agreed',names:'Names',add:'Add a person',write:'Write it',
+      amount:'Amount',what:'What for',save:'Save',name:'Name',phone:'Phone',secret:'Their number',
+      clear:'Agree on it',sms:'Paste the M-Pesa SMS',code:'They said their number',dispute:'Send the disputed list',
+      report:'Report',backup:'Backup',restore:'Restore',strike:'Strike',struck:'struck out',locked:'M-Pesa',
+      none:'Nothing yet.',grey:'not agreed yet',black:'agreed',open:'Outstanding',
+      setupQ:'What is this book for?',go:'Start'}
+};
+function sBal(line, agreedOnly){
+  return line.items.reduce((s,e)=>{
+    if(e.s==='struck') return s;
+    if(agreedOnly && e.s!=='ok') return s;
+    return s + (e.k==='d' ? e.a : -e.a);
+  },0);
+}
+function parseSMS(txt){
+  const code = (String(txt).match(/\b[A-Z0-9]{10}\b/)||[])[0] || '';
+  const amt = (String(txt).match(/(?:Ksh|KES)\s?([\d,]+(?:\.\d+)?)/i)||[])[1] || '';
+  return {code:code, a:N(amt)};
+}
+
+
+/* ================= JICREDIT — the real build ================= */
+const JT = [
+  {k:'school',n:'School',who:'Parents',amt:12000,cnt:400},
+  {k:'landlord',n:'Landlord',who:'Tenants',amt:18000,cnt:24},
+  {k:'fibre',n:'Fibre / ISP',who:'Subscribers',amt:3000,cnt:180},
+  {k:'water',n:'Water vendor',who:'Customers',amt:1500,cnt:90},
+  {k:'gym',n:'Gym',who:'Members',amt:3500,cnt:120},
+  {k:'security',n:'Security firm',who:'Households',amt:2000,cnt:150},
+  {k:'garbage',n:'Garbage collection',who:'Households',amt:500,cnt:300},
+  {k:'chama',n:'Chama',who:'Members',amt:5000,cnt:30},
+  {k:'daycare',n:'Daycare',who:'Parents',amt:8000,cnt:45}
+];
+const JNAMES=['Wanjiru K.','Otieno M.','Achieng O.','Kamau N.','Mwende S.','Kiprono J.','Njoroge P.','Halima A.',
+  'Barasa W.','Chebet R.','Mutiso D.','Awino L.','Githinji E.','Nasieku T.','Omondi B.','Wairimu G.',
+  'Kipchoge S.','Atieno V.','Mbugua H.','Salma Y.','Kilonzo F.','Nyambura C.','Odhiambo I.','Zawadi M.'];
+/* the only place this app touches a bank */
+const demoRail = {
+  requestCollection(payer, amount){ return {ok:true, ref:'JC'+Math.random().toString(36).slice(2,8).toUpperCase(), amount:amount}; },
+  validateAccount(acct){ return {ok:String(acct).replace(/\D/g,'').length>=8, name:'Settlement account'}; }
+};
+
+
+function bindScr(root, st, save){
+  root.querySelectorAll('[data-scr]').forEach(b=>b.onclick=()=>{ st.scr=b.dataset.scr; save(); });
+}
+
+const MODULES = {
+
+/* ---------- 1. Timber Calc ---------- */
+timber:{ title:'Board foot calculator', draw(root, st, save){
+  const bf = N(st.w)*N(st.t)*N(st.l)/12*(N(st.p)||0);
+  const amt = bf*N(st.rate);
+  const tbf = st.items.reduce((s,i)=>s+i.bf,0);
+  const ttl = st.items.reduce((s,i)=>s+i.amt,0);
+  root.innerHTML = `
+  <div class="frow">
+    <label class="fl">Width (in)<input class="in" id="f_w" inputmode="decimal" value="${ESC(st.w)}"></label>
+    <label class="fl">Thickness (in)<input class="in" id="f_t" inputmode="decimal" value="${ESC(st.t)}"></label>
+  </div>
+  <div class="frow">
+    <label class="fl">Length (ft)<input class="in" id="f_l" inputmode="decimal" value="${ESC(st.l)}"></label>
+    <label class="fl">Pieces<input class="in" id="f_p" inputmode="numeric" value="${ESC(st.p)}"></label>
+  </div>
+  <div class="frow">
+    <label class="fl">Rate per board foot<input class="in" id="f_rate" inputmode="decimal" value="${ESC(st.rate)}"></label>
+  </div>
+  <div class="out">
+    <div class="orow"><span>Board feet</span><b>${F2(bf)}</b></div>
+    <div class="orow"><span>Amount</span><b class="big">${KS(amt)}</b></div>
+  </div>
+  <div class="btnrow"><button class="btn" id="add">Add to batch</button>
+    ${st.items.length?'<button class="btn ghost" id="clr">Clear batch</button>':''}</div>
+  <div class="list">
+    ${st.items.map((i,x)=>`<div class="li"><span>${ESC(i.d)}<br><small>${F2(i.bf)} bd ft</small></span>
+      <span><b>${KS(i.amt)}</b><button class="x" data-del="${x}">×</button></span></div>`).join('')}
+  </div>
+  ${st.items.length?`<div class="out">
+    <div class="orow"><span>Batch board feet</span><b>${F2(tbf)}</b></div>
+    <div class="orow"><span>Batch total</span><b class="big">${KS(ttl)}</b></div></div>
+    <div class="btnrow"><button class="btn ghost" id="rcpt">Save receipt</button></div>`:''}`;
+  bindVals(root, st, save, ['w','t','l','p','rate']);
+  root.querySelectorAll('.in').forEach(el=>el.addEventListener('change',()=>save(true)));
+  root.querySelector('#add').onclick = ()=>{
+    const b = N(st.w)*N(st.t)*N(st.l)/12*(N(st.p)||0);
+    if(!b) return;
+    st.items.push({d:`${st.w}" x ${st.t}" x ${st.l}ft x ${st.p||1}`, bf:b, amt:b*N(st.rate)});
+    st.w=''; st.t=''; st.l=''; save();
+  };
+  const clr = root.querySelector('#clr'); if(clr) clr.onclick = ()=>{ st.items=[]; save(true); };
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ st.items.splice(+b.dataset.del,1); save(true); });
+  const r = root.querySelector('#rcpt'); if(r) r.onclick = ()=>{
+    const txt = ['RECEIPT  '+today(),'','Item,Board feet,Amount']
+      .concat(st.items.map(i=>`${i.d},${F2(i.bf)},${Math.round(i.amt)}`))
+      .concat(['',`TOTAL,${F2(tbf)},${Math.round(ttl)}`]).join('\n');
+    download('timber-'+Date.now()+'.csv', txt, 'text/csv');
+  };
+}},
+
+/* ---------- 2. Sahihi ---------- */
+sahihi:{ title:'Sahihi', draw(root, st, save){
+  if(!Array.isArray(st.lines)){ st.lines=[]; st.setup=true; }
+  const L = st.lang||'sw', W = SK[st.kind||'deni'][L], U = SU[L];
+  const line = st.sel!=null ? st.lines[st.sel] : null;
+  const head = `<div class="tabs" style="margin-bottom:10px">
+      <button class="tab ${L==='sw'?'on':''}" data-lang="sw">Kiswahili</button>
+      <button class="tab ${L==='en'?'on':''}" data-lang="en">English</button></div>`;
+
+  /* ---- first open: one question ---- */
+  if(st.setup!==false){
+    root.innerHTML = head + `
+    <div class="note" style="margin:4px 0 14px">${U.setupQ}</div>
+    <div class="list">
+      ${Object.keys(SK).map(k=>`<button class="card" data-kind="${k}" style="margin:0">
+        <span><span class="ct">${SK[k][L].n}</span><span class="cs">${SK[k][L].who} · ${SK[k][L].owe}</span></span></button>`).join('')}
+    </div>
+    <div class="note">Kila neno kwenye app litabadilika kulingana na jibu lako. Code moja, biashara nne.</div>`;
+    root.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{ st.lang=b.dataset.lang; save(); });
+    root.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{ st.kind=b.dataset.kind; st.setup=false; save(); });
+    return;
+  }
+
+  /* ---- screen 2: one line between two names ---- */
+  if(line){
+    const mine = sBal(line,false), agreed = sBal(line,true);
+    const disagree = Math.round(mine)!==Math.round(agreed);
+    const greys = line.items.filter(e=>e.s==='grey');
+    root.innerHTML = `
+    <button class="back" data-scr="list" style="margin-bottom:12px">‹ ${U.names}</button>
+    <div class="keycard">
+      <div class="knm">${ESC(line.name)}</div>
+      <div class="kmeta">${U.secret}: <b style="color:var(--gold)">${ESC(line.code)}</b> · ${ESC(line.phone||'—')}</div>
+      <div class="orow" style="margin-top:10px"><span>${U.mine}</span><b class="big">${KS(mine)}</b></div>
+      ${disagree?`<div class="orow"><span>${U.agreed}</span><b>${KS(agreed)}</b></div>`:''}
+    </div>
+    ${disagree?`<div class="note" style="margin-top:0">${greys.length} ${U.grey}. ${L==='sw'?'Safu ya pili ndiyo benki inasoma.':'The second figure is the one a lender reads.'}</div>`:''}
+
+    <div class="sect">${U.write}</div>
+    <div class="chips">
+      <button class="chip ${(st.k||'d')==='d'?'on':''}" data-k="d">${W.owe}</button>
+      <button class="chip ${st.k==='p'?'on':''}" data-k="p">${W.pay}</button>
+    </div>
+    <div class="frow" style="margin-top:10px">
+      <label class="fl">${U.amount}<input class="in" id="f_a" inputmode="decimal" value="${ESC(st.a)}"></label>
+      <label class="fl" style="flex:1.4">${U.what}<input class="in" id="f_x" placeholder="${ESC(W.ph)}" value="${ESC(st.x)}"></label>
+    </div>
+    <div class="btnrow"><button class="btn" id="write">${U.save}</button></div>
+
+    <div class="sect">${U.clear}</div>
+    <div class="tabs">
+      ${[['sms',U.sms],['code',U.code],['dispute',U.dispute]].map(([k,l])=>
+        `<button class="tab ${ (st.cw||'sms')===k ?'on':''}" data-cw="${k}" style="font-size:10.5px">${l}</button>`).join('')}
+    </div>
+    ${ (st.cw||'sms')==='sms' ? `
+      <label class="fl">${U.sms}<textarea class="in" id="f_sms" rows="3" placeholder="TFQ4H2K9XY Confirmed. Ksh500.00 received from...">${ESC(st.sms)}</textarea></label>
+      <div class="btnrow"><button class="btn" id="dosms">${U.save}</button></div>`
+    : (st.cw==='code') ? `
+      <label class="fl">${U.secret}<input class="in" id="f_cd" inputmode="numeric" placeholder="0000" value="${ESC(st.cd)}"></label>
+      <div class="btnrow"><button class="btn" id="docode">${U.clear}</button></div>
+      <div class="note">${L==='sw'?'Akisema namba yake mbele yako, kila kitu cha kijivu kinakuwa cheusi.':'When they say their number across the counter, every grey line turns black.'}</div>`
+    : `
+      <div class="note" style="margin:0 0 10px">${greys.length} ${U.grey}.</div>
+      <div class="btnrow"><button class="btn" id="dodis" ${greys.length?'':'disabled'}>${U.dispute}</button></div>` }
+
+    <div class="sect">${U.names==='Majina'?'Kila kitu':'Every line'}</div>
+    <div class="list">
+      ${line.items.slice().reverse().map((e,ri)=>{
+        const i = line.items.length-1-ri;
+        const locked = !!e.ref;
+        const mark = e.s==='ok' ? '✓' : (e.s==='struck' ? '—' : '?');
+        return `<div class="li ${e.s==='struck'?'done':''}">
+          <span style="${e.s==='struck'?'text-decoration:line-through':''}">${ESC(e.x||'—')}
+            <br><small>${e.k==='d'?W.owe:W.pay} · ${ESC(e.d)} ${locked?'· '+U.locked+' '+ESC(e.ref):''} ${e.s==='struck'?'· '+U.struck+' '+ESC(e.sd||''):''}</small></span>
+          <span><b style="color:${e.s==='ok'?'var(--gold)':'var(--muted)'}">${mark}</b>
+            <b>${KS(e.a)}</b>
+            ${locked||e.s==='struck'?'':`<button class="x" data-strike="${i}">${U.strike}</button>`}</span></div>`;
+      }).join('') || `<div class="none">${U.none}</div>`}
+    </div>`;
+    bindVals(root, st, save, ['a','x','sms','cd']);
+    root.querySelector('[data-scr]').onclick = ()=>{ st.sel=null; save(); };
+    root.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ st.k=b.dataset.k; save(); });
+    root.querySelectorAll('[data-cw]').forEach(b=>b.onclick=()=>{ st.cw=b.dataset.cw; save(); });
+    root.querySelector('#write').onclick = ()=>{
+      if(!N(st.a)) return;
+      line.items.push({a:N(st.a), x:st.x, k:st.k||'d', s:'grey', d:today(), ref:''});
+      st.a=''; st.x=''; save();
+    };
+    const ds = root.querySelector('#dosms'); if(ds) ds.onclick = ()=>{
+      const p = parseSMS(st.sms);
+      if(!p.a){ alert(L==='sw'?'Hiyo SMS haisomeki.':'That SMS did not read.'); return; }
+      line.items.push({a:p.a, x:'M-Pesa', k:'p', s:'ok', d:today(), ref:p.code});
+      st.sms=''; save();
+    };
+    const dc = root.querySelector('#docode'); if(dc) dc.onclick = ()=>{
+      if(String(st.cd).trim()!==line.code){ alert(L==='sw'?'Namba si sawa.':'Wrong number.'); return; }
+      line.items.forEach(e=>{ if(e.s==='grey') e.s='ok'; });
+      st.cd=''; save();
+    };
+    const dd = root.querySelector('#dodis'); if(dd) dd.onclick = ()=>{
+      let t = (L==='sw'?'Habari ':'Hello ')+line.name+'.\n'+(L==='sw'?'Hivi ndivyo nimeandika, tuangalie pamoja:':'This is what I have written down, let us check it together:')+'\n\n';
+      greys.forEach(e=> t += `${e.d} · ${e.x||'—'} · ${KS(e.a)}\n`);
+      t += '\n'+(L==='sw'?'Kama si sawa, niambie.':'If it is not right, tell me.');
+      t += '\n'+(L==='sw'?'Namba yako: ':'Your number: ')+line.code;
+      wa(line.phone, t);
+    };
+    root.querySelectorAll('[data-strike]').forEach(b=>b.onclick=()=>{
+      const e = line.items[+b.dataset.strike];
+      e.s='struck'; e.sd=today(); save();
+    });
+    return;
+  }
+
+  /* ---- screen 1: names and what is outstanding ---- */
+  const totalMine = st.lines.reduce((s,l)=>s+Math.max(0,sBal(l,false)),0);
+  const totalAgreed = st.lines.reduce((s,l)=>s+Math.max(0,sBal(l,true)),0);
+  const split = Math.round(totalMine)!==Math.round(totalAgreed);
+  root.innerHTML = head + `
+  <div class="out">
+    <div class="orow"><span>${U.mine}</span><b class="big">${KS(totalMine)}</b></div>
+    ${split?`<div class="orow"><span>${U.agreed}</span><b>${KS(totalAgreed)}</b></div>`:''}
+    <div class="note">${W.n} · ${st.lines.length} ${U.names.toLowerCase()}</div>
+  </div>
+  <div class="sect">${U.open}</div>
+  <div class="list">
+    ${st.lines.map((l,i)=>{
+      const b = sBal(l,false), g = l.items.filter(e=>e.s==='grey').length;
+      return `<button class="card" data-line="${i}" style="margin:0">
+        <span><span class="ct">${ESC(l.name)}</span><span class="cs">${l.code} · ${l.items.length} ${L==='sw'?'vitu':'lines'}${g?' · '+g+' '+U.grey:''}</span></span>
+        <span><b style="font-size:15px">${KS(b)}</b></span></button>`;
+    }).join('') || `<div class="none">${U.none}</div>`}
+  </div>
+  <div class="sect">${U.add}</div>
+  <div class="frow">
+    <label class="fl">${U.name}<input class="in" id="f_nm" value="${ESC(st.nm)}"></label>
+    <label class="fl">${U.phone}<input class="in" id="f_ph" inputmode="tel" value="${ESC(st.ph)}"></label>
+  </div>
+  <div class="btnrow"><button class="btn" id="addp">${U.add}</button></div>
+  <div class="btnrow">
+    <button class="btn ghost" id="rep">${U.report}</button>
+    <button class="btn ghost" id="bk">${U.backup}</button>
+    <button class="btn ghost" id="rs">${U.restore}</button>
+  </div>`;
+  bindVals(root, st, save, ['nm','ph']);
+  root.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{ st.lang=b.dataset.lang; save(); });
+  root.querySelectorAll('[data-line]').forEach(b=>b.onclick=()=>{ st.sel=+b.dataset.line; save(); });
+  root.querySelector('#addp').onclick = ()=>{
+    if(!st.nm) return;
+    st.lines.push({name:st.nm, phone:st.ph, code:String(1000+Math.floor(Math.random()*9000)), items:[]});
+    st.nm=''; st.ph=''; save();
+  };
+  root.querySelector('#rep').onclick = ()=>{
+    let t='SAHIHI — '+today()+'\n\n';
+    t+=U.mine+': '+KS(totalMine)+'\n'+U.agreed+': '+KS(totalAgreed)+'\n\n';
+    st.lines.forEach(l=>{ t+=l.name+' ('+l.code+') — '+KS(sBal(l,false))+' | '+U.agreed.toLowerCase()+' '+KS(sBal(l,true))+'\n'; });
+    t+='\n'+(L==='sw'?'Safu ya pili ndiyo benki inasoma.':'The second figure is the one a lender reads.');
+    download('sahihi-'+Date.now()+'.txt', t, 'text/plain');
+  };
+  root.querySelector('#bk').onclick = ()=> wa(DB.get('system').wa, JSON.stringify({kind:st.kind, lines:st.lines}));
+  root.querySelector('#rs').onclick = ()=>{
+    const s2 = prompt(L==='sw'?'Bandika nakala hapa:':'Paste the backup here:');
+    if(!s2) return;
+    try{ const d=JSON.parse(s2); if(!d.lines) throw 0;
+      d.lines.forEach(nl=>{ if(!st.lines.some(x=>x.code===nl.code)) st.lines.push(nl); });
+      if(d.kind) st.kind=d.kind; save();
+    }catch(e){ alert(L==='sw'?'Nakala haisomeki.':'That backup did not read.'); }
+  };
+}},
+
+/* ---------- 3. Route Book ---------- */
+routebook:{ title:'Route book', draw(root, st, save){
+  const bal = N(st.pb) + N(st.gv) - N(st.pc) - N(st.pm) - N(st.rt);
+  const T = k => st.stops.reduce((s,x)=>s+x[k],0);
+  root.innerHTML = `
+  <label class="fl">Shop<input class="in" id="f_sh" value="${ESC(st.sh)}"></label>
+  <div class="frow" style="margin-top:10px">
+    <label class="fl">Goods value<input class="in" id="f_gv" inputmode="decimal" value="${ESC(st.gv)}"></label>
+    <label class="fl">Previous balance<input class="in" id="f_pb" inputmode="decimal" value="${ESC(st.pb)}"></label>
+  </div>
+  <div class="frow">
+    <label class="fl">Cash<input class="in" id="f_pc" inputmode="decimal" value="${ESC(st.pc)}"></label>
+    <label class="fl">M-Pesa<input class="in" id="f_pm" inputmode="decimal" value="${ESC(st.pm)}"></label>
+  </div>
+  <div class="frow"><label class="fl">Returns<input class="in" id="f_rt" inputmode="decimal" value="${ESC(st.rt)}"></label></div>
+  <div class="out">
+    <div class="orow"><span>Balance after this stop</span><b class="big">${KS(bal)}</b></div>
+  </div>
+  <div class="btnrow"><button class="btn" id="add">Save stop</button></div>
+  <div class="sect">Today's route · ${st.stops.length} stops</div>
+  <div class="list">
+    ${st.stops.map((s,x)=>`<div class="li"><span>${ESC(s.sh)}<br><small>goods ${KS(s.gv)} · collected ${KS(s.pc+s.pm)}</small></span>
+      <span><b>${KS(s.bal)}</b><button class="x" data-del="${x}">×</button></span></div>`).join('')
+      || '<div class="none">No stops yet. The crew fills this at the shop door instead of the notebook.</div>'}
+  </div>
+  ${st.stops.length?`<div class="out">
+    <div class="orow"><span>Delivered</span><b>${KS(T('gv'))}</b></div>
+    <div class="orow"><span>Cash collected</span><b>${KS(T('pc'))}</b></div>
+    <div class="orow"><span>M-Pesa collected</span><b>${KS(T('pm'))}</b></div>
+    <div class="orow"><span>Returns</span><b>${KS(T('rt'))}</b></div>
+    <div class="orow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px"><span>Outstanding on route</span><b class="big">${KS(T('bal'))}</b></div>
+   </div>
+   <div class="btnrow"><button class="btn ghost" id="csv">Export per-shop CSV</button>
+     <button class="btn ghost" id="clr">End route</button></div>`:''}`;
+  bindVals(root, st, save, ['sh','gv','pb','pc','pm','rt']);
+  root.querySelectorAll('.in').forEach(el=>el.addEventListener('change',()=>save(true)));
+  root.querySelector('#add').onclick = ()=>{
+    if(!st.sh) return;
+    const b = N(st.pb) + N(st.gv) - N(st.pc) - N(st.pm) - N(st.rt);
+    st.stops.push({sh:st.sh, gv:N(st.gv), pb:N(st.pb), pc:N(st.pc), pm:N(st.pm), rt:N(st.rt), bal:b, t:today()});
+    st.sh=''; st.gv=''; st.pb=''; st.pc=''; st.pm=''; st.rt=''; save(true);
+  };
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ st.stops.splice(+b.dataset.del,1); save(true); });
+  const c = root.querySelector('#csv'); if(c) c.onclick = ()=>{
+    const rows = ['Date,Shop,Goods,Previous balance,Cash,M-Pesa,Returns,New balance']
+      .concat(st.stops.map(s=>[s.t,s.sh,s.gv,s.pb,s.pc,s.pm,s.rt,s.bal].join(',')));
+    download('route-'+Date.now()+'.csv', rows.join('\n'), 'text/csv');
+  };
+  const cl = root.querySelector('#clr'); if(cl) cl.onclick = ()=>{ st.stops=[]; save(true); };
+}},
+
+/* ---------- 4. Kyama ---------- */
+kyama:{ title:'Savings tins', draw(root, st, save){
+  const tw = st.tins.reduce((s,t)=>s+t.w,0);
+  const total = st.tins.reduce((s,t)=>s+t.b,0);
+  const cut = N(st.sale)*N(st.rate)/100;
+  root.innerHTML = `
+  <div class="frow">
+    <label class="fl">Sale / mauzo<input class="in" id="f_sale" inputmode="decimal" value="${ESC(st.sale)}"></label>
+    <label class="fl">Save rate %<input class="in" id="f_rate" inputmode="decimal" value="${ESC(st.rate)}"></label>
+  </div>
+  <div class="out">
+    <div class="orow"><span>Goes to the tins</span><b class="big">${KS(cut)}</b></div>
+    <div class="orow"><span>Stays in the business</span><b>${KS(N(st.sale)-cut)}</b></div>
+  </div>
+  <div class="btnrow"><button class="btn" id="alloc">Put it away</button></div>
+  <div class="sect">Tins · ${KS(total)} saved</div>
+  <div class="tins">
+    ${st.tins.map((t,x)=>`<div class="tin">
+      <div class="li" style="border:0;background:none;padding:0 2px 6px">
+        <span>${ESC(t.n)}<br><small>${Math.round(t.w/tw*100)}% of each save</small></span><b>${KS(t.b)}</b></div>
+      <div class="bar"><i style="width:${total?Math.round(t.b/total*100):0}%"></i></div>
+      <div class="btnrow" style="margin-top:8px">
+        <button class="x wide" data-less="${x}">−</button><button class="x wide" data-more="${x}">+</button>
+        <button class="btn ghost sm" data-take="${x}">Take from this tin</button></div>
+    </div>`).join('')}
+  </div>
+  ${st.tk!==undefined?`<div class="out"><div class="sect" style="margin-top:0">Take from ${ESC(st.tins[st.tk].n)}</div>
+    <label class="fl">Amount<input class="in" id="f_wa" inputmode="decimal" value="${ESC(st.wa)}"></label>
+    <div class="btnrow"><button class="btn" id="dotake">Confirm</button><button class="btn ghost" id="cancel">Cancel</button></div></div>`:''}`;
+  bindVals(root, st, save, ['sale','rate','wa']);
+  root.querySelectorAll('.in').forEach(el=>el.addEventListener('change',()=>save(true)));
+  root.querySelector('#alloc').onclick = ()=>{
+    const c = N(st.sale)*N(st.rate)/100, W = st.tins.reduce((s,t)=>s+t.w,0);
+    if(!c) return;
+    st.tins.forEach(t=> t.b += c*t.w/W);
+    st.sale=''; save();
+  };
+  root.querySelectorAll('[data-more]').forEach(b=>b.onclick=()=>{ st.tins[+b.dataset.more].w++; save(true); });
+  root.querySelectorAll('[data-less]').forEach(b=>b.onclick=()=>{
+    const t=st.tins[+b.dataset.less]; if(t.w>1) t.w--; save(true); });
+  root.querySelectorAll('[data-take]').forEach(b=>b.onclick=()=>{ st.tk=+b.dataset.take; st.wa=''; save(true); });
+  const dt = root.querySelector('#dotake'); if(dt) dt.onclick = ()=>{
+    const t=st.tins[st.tk]; t.b = Math.max(0, t.b - N(st.wa)); delete st.tk; st.wa=''; save(true); };
+  const cc = root.querySelector('#cancel'); if(cc) cc.onclick = ()=>{ delete st.tk; save(true); };
+}},
+
+/* ---------- 5. E_kamagera ---------- */
+ekamagera:{ title:'Seat booking', draw(root, st, save){
+  const seats = st.cls;
+  const fee = 50;
+  const total = st.taken.length*(N(st.fare)+fee);
+  root.innerHTML = `
+  <div class="frow">
+    <label class="fl">Vehicle<select class="in" id="cls">
+      ${[5,7,14,16,33].map(c=>`<option value="${c}" ${c===seats?'selected':''}>${c}-seater</option>`).join('')}
+    </select></label>
+    <label class="fl">Fare per seat<input class="in" id="f_fare" inputmode="decimal" value="${ESC(st.fare)}"></label>
+  </div>
+  <div class="sect">Pick seats · ${st.taken.length} of ${seats}</div>
+  <div class="seatmap">
+    ${Array.from({length:seats},(_,i)=>`<button class="seat ${st.taken.includes(i+1)?'on':''}" data-seat="${i+1}">${i+1}</button>`).join('')}
+  </div>
+  <div class="out">
+    <div class="orow"><span>Fare × ${st.taken.length}</span><b>${KS(st.taken.length*N(st.fare))}</b></div>
+    <div class="orow"><span>Service ${KS(fee)} per seat</span><b>${KS(st.taken.length*fee)}</b></div>
+    <div class="orow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px"><span>Pay to hold the seat</span><b class="big">${KS(total)}</b></div>
+    <div class="note">No seat is held without payment. Cancelling refunds 70% — ${KS(total*0.7)} back, ${KS(total*0.3)} kept.</div>
+  </div>
+  <div class="btnrow"><button class="btn" id="confirm" ${st.taken.length?'':'disabled'}>Confirm booking</button>
+    <button class="btn ghost" id="clr">Clear</button></div>
+  ${st.log.length?`<div class="sect">Bookings</div><div class="list">
+    ${st.log.map((b,x)=>`<div class="li"><span>${b.cls}-seater · seats ${b.seats}<br><small>${b.t}</small></span>
+      <span><b>${KS(b.amt)}</b><button class="x" data-cancel="${x}">×</button></span></div>`).join('')}</div>`:''}`;
+  bindVals(root, st, save, ['fare']);
+  root.querySelector('#f_fare').addEventListener('change',()=>save(true));
+  root.querySelector('#cls').onchange = e => { st.cls=+e.target.value; st.taken=[]; save(true); };
+  root.querySelectorAll('[data-seat]').forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.seat;
+    st.taken = st.taken.includes(n) ? st.taken.filter(s=>s!==n) : st.taken.concat(n);
+    save(true);
+  });
+  root.querySelector('#confirm').onclick = ()=>{
+    if(!st.taken.length) return;
+    st.log.unshift({cls:st.cls, seats:st.taken.slice().sort((a,b)=>a-b).join(', '), amt:total, t:today()});
+    st.taken=[]; save(true);
+  };
+  root.querySelector('#clr').onclick = ()=>{ st.taken=[]; save(true); };
+  root.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{
+    const bk=st.log[+b.dataset.cancel];
+    alert('Cancelled. Refund '+KS(bk.amt*0.7)+', penalty '+KS(bk.amt*0.3)+'.');
+    st.log.splice(+b.dataset.cancel,1); save(true);
+  });
+}},
+
+/* ---------- 7. Nyumbani Hub — the registry ---------- */
+nyumbani:{ title:'Founding registry', draw(root, st, save){
+  const sys = DB.get('system');
+  const n = st.members.length;
+  const mine = st.me!=null ? st.members[st.me] : null;
+  const vouchCount = id => st.vouches.filter(v=>v.for===id).length;
+  const tab = st.tab||'join';
+  root.innerHTML = `
+  <div class="tabs">
+    ${[['join','Join'],['vouch','Vouch'],['reg','Registry']].map(([k,l])=>
+      `<button class="tab ${tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('')}
+  </div>
+  ${tab==='join' ? (mine ? `
+    <div class="keycard">
+      <div class="kn">${ESC(mine.no)}</div>
+      <div class="knm">${ESC(mine.n)}</div>
+      <div class="kmeta">${ESC(mine.tr)} · ${ESC(mine.ct)}</div>
+      <div class="kmeta">Joined ${ESC(mine.t)} · ${vouchCount(mine.no)} ${vouchCount(mine.no)===1?'vouch':'vouches'}</div>
+    </div>
+    <div class="note">Your number is how the registry knows you. Someone who already holds one can vouch for you under the Vouch tab — never for payment, and never for a reward. That is the one rule the whole thing rests on.</div>
+    <div class="btnrow"><button class="btn" id="send">Send my details to Nyumbani</button>
+      <button class="btn ghost" id="again">Register someone else</button></div>`
+  : `
+    <div class="note" style="margin:0 0 14px">A verified identity anyone in Kenya can point to. Give your real details — the registry is only worth what it can stand behind.</div>
+    <div class="frow"><label class="fl">Full name<input class="in" id="f_nm" value="${ESC(st.nm)}"></label></div>
+    <div class="frow">
+      <label class="fl">Phone<input class="in" id="f_ph" inputmode="tel" placeholder="07..." value="${ESC(st.ph)}"></label>
+      <label class="fl">County<select class="in" id="ct">${['',...COUNTIES].map(c=>`<option ${c===st.ct?'selected':''}>${c}</option>`).join('')}</select></label>
+    </div>
+    <div class="frow"><label class="fl">What you do<input class="in" id="f_tr" placeholder="Shopkeeper, fundi, driver..." value="${ESC(st.tr)}"></label></div>
+    <div class="frow">
+      <label class="fl">Vouched by (optional)<input class="in" id="f_vn" placeholder="Name" value="${ESC(st.vn)}"></label>
+      <label class="fl">Their number<input class="in" id="f_vp" placeholder="NH-0001" value="${ESC(st.vp)}"></label>
+    </div>
+    <div class="btnrow"><button class="btn" id="join">Claim my number</button></div>
+    <div class="note">Member ${String(n+1).padStart(4,'0')} of the founding registry.</div>`)
+  : tab==='vouch' ? `
+    <div class="note" style="margin:0 0 14px">Vouch only for someone you would stand behind if it went wrong. Vouches are never bought, never rewarded, never counted toward a bounty. Paying for them would turn a promise into a wage and the whole signal would die.</div>
+    <div class="frow">
+      <label class="fl">Their member number<input class="in" id="f_gf" placeholder="NH-0001" value="${ESC(st.gf||'')}"></label>
+      <label class="fl">Your name<input class="in" id="f_gn" value="${ESC(st.gn||'')}"></label>
+    </div>
+    <div class="frow"><label class="fl">How you know them<input class="in" id="f_gh" placeholder="Neighbour, supplier, 3 years" value="${ESC(st.gh||'')}"></label></div>
+    <div class="btnrow"><button class="btn" id="dovouch">Vouch</button></div>
+    <div class="sect">Vouches recorded · ${st.vouches.length}</div>
+    <div class="list">${st.vouches.slice().reverse().map(v=>
+      `<div class="li"><span>${ESC(v.by)} → ${ESC(v.for)}<br><small>${ESC(v.how)} · ${ESC(v.t)}</small></span></div>`).join('')
+      || '<div class="none">No vouches yet.</div>'}</div>`
+  : `
+    <div class="out"><div class="orow"><span>Members</span><b class="big">${n}</b></div>
+      <div class="orow"><span>Vouches</span><b>${st.vouches.length}</b></div>
+      <div class="orow"><span>Counties</span><b>${new Set(st.members.map(m=>m.ct).filter(Boolean)).size}</b></div></div>
+    <div class="sect">Everyone registered</div>
+    <div class="list">${st.members.slice().reverse().map(m=>
+      `<div class="li"><span>${ESC(m.n)}<br><small>${ESC(m.no)} · ${ESC(m.tr||'—')} · ${ESC(m.ct||'—')} · ${vouchCount(m.no)} vouches</small></span>
+       <span><button class="x" data-wa="${ESC(m.p)}">↗</button></span></div>`).join('')
+      || '<div class="none">Nobody yet. The Join tab is where it starts.</div>'}</div>
+    ${n?`<div class="btnrow"><button class="btn ghost" id="csv">Export registry</button></div>`:''}`}`;
+  bindVals(root, st, save, ['nm','ph','tr','vn','vp','gf','gn','gh']);
+  root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ st.tab=b.dataset.tab; save(); });
+  const ct = root.querySelector('#ct'); if(ct) ct.onchange = e=>{ st.ct=e.target.value; save(); };
+  const j = root.querySelector('#join'); if(j) j.onclick = ()=>{
+    if(!st.nm || !st.ph){ alert('Name and phone are what make it a registry.'); return; }
+    const no = 'NH-'+String(st.members.length+1).padStart(4,'0');
+    st.members.push({no:no, n:st.nm, p:st.ph, ct:st.ct, tr:st.tr, t:today()});
+    if(st.vn) st.vouches.push({by:st.vn, for:no, how:'introduced at signup', t:today()});
+    st.me = st.members.length-1;
+    st.nm=''; st.ph=''; st.tr=''; st.vn=''; st.vp='';
+    save(); postSignup(st.members[st.me]);
+  };
+  const ag = root.querySelector('#again'); if(ag) ag.onclick = ()=>{ st.me=null; save(); };
+  const sd = root.querySelector('#send'); if(sd) sd.onclick = ()=>{
+    const m = st.members[st.me];
+    wa(sys.wa, `Nyumbani Hub registry\n${m.no}\n${m.n}\n${m.p}\n${m.tr||''} · ${m.ct||''}`);
+  };
+  const dv = root.querySelector('#dovouch'); if(dv) dv.onclick = ()=>{
+    if(!st.gf || !st.gn) return;
+    st.vouches.push({by:st.gn, for:st.gf.toUpperCase(), how:st.gh||'—', t:today()});
+    st.gf=''; st.gh=''; save();
+  };
+  root.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>wa(b.dataset.wa,'Habari, from the Nyumbani Hub registry.'));
+  const c = root.querySelector('#csv'); if(c) c.onclick = ()=>download('nyumbani-registry.csv',
+    ['Number,Name,Phone,County,Trade,Joined,Vouches'].concat(st.members.map(m=>
+      [m.no,m.n,m.p,m.ct,m.tr,m.t,vouchCount(m.no)].join(','))).join('\n'),'text/csv');
+}},
+
+/* ---------- 8. Day1 ---------- */
+day1:{ title:'Broadcast and lanes', draw(root, st, save){
+  const lane = st.lane||'All';
+  const inLane = l => st.members.filter(m=>m.l===l).length;
+  const posts = st.posts.filter(p=> lane==='All' || p.l.includes(lane));
+  root.innerHTML = `
+  ${st.cname ? `<div class="keycard sm"><div class="knm">${ESC(st.cname)}</div>
+      <div class="kmeta">${st.members.length} members · ${st.posts.length} broadcasts</div></div>`
+    : `<div class="note" style="margin:0 0 12px">Name the community first. This is the thing people land in after "join our WhatsApp group".</div>
+       <div class="frow"><label class="fl">Community name<input class="in" id="f_cn" value="${ESC(st.cn||'')}"></label></div>
+       <div class="btnrow"><button class="btn" id="mk">Create it</button></div>`}
+  ${st.cname?`
+  <div class="sect">Broadcast</div>
+  <div class="frow"><label class="fl">Message<textarea class="in" id="f_msg" rows="3">${ESC(st.msg)}</textarea></label></div>
+  <div class="chips">${LANES.map(l=>`<button class="chip ${(st.sel||[]).includes(l)?'on':''}" data-sel="${l}">${l}</button>`).join('')}</div>
+  <div class="btnrow"><button class="btn" id="post">Send to ${(st.sel||[]).length||0} lanes</button></div>
+
+  <div class="sect">Lanes</div>
+  <div class="chips">${['All',...LANES].map(l=>`<button class="chip ${lane===l?'on':''}" data-lane="${l}">${l}${l==='All'?'':' '+inLane(l)}</button>`).join('')}</div>
+  <div class="list" style="margin-top:12px">
+    ${posts.slice().reverse().map(p=>`<div class="li" style="align-items:flex-start">
+      <span>${ESC(p.x)}<br><small>${p.l.join(' · ')} · ${ESC(p.t)}</small></span></div>`).join('')
+      || '<div class="none">Nothing in this lane yet. A broadcast only shows up where you sent it — that is the whole point.</div>'}
+  </div>
+
+  <div class="sect">Members</div>
+  <div class="frow">
+    <label class="fl" style="flex:1.3">Name<input class="in" id="f_mn" value="${ESC(st.mn)}"></label>
+    <label class="fl">Lane<select class="in" id="ml">${LANES.map(l=>`<option ${l===st.ml?'selected':''}>${l}</option>`).join('')}</select></label>
+  </div>
+  <div class="btnrow"><button class="btn ghost" id="addm">Add member</button></div>
+  <div class="list" style="margin-top:10px">
+    ${st.members.slice().reverse().map((m,i)=>`<div class="li"><span>${ESC(m.n)}<br><small>${ESC(m.l)}</small></span>
+      <button class="x" data-delm="${st.members.length-1-i}">×</button></div>`).join('')
+      || '<div class="none">A hundred members who all joined for one reason still need sorting. That is what the lane does.</div>'}</div>`:''}`;
+  bindVals(root, st, save, ['cn','msg','mn']);
+  const mk = root.querySelector('#mk'); if(mk) mk.onclick = ()=>{ if(st.cn){ st.cname=st.cn; save(); } };
+  root.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
+    const l=b.dataset.sel; st.sel = (st.sel||[]).includes(l) ? st.sel.filter(x=>x!==l) : (st.sel||[]).concat(l); save(); });
+  root.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{ st.lane=b.dataset.lane; save(); });
+  const p = root.querySelector('#post'); if(p) p.onclick = ()=>{
+    if(!st.msg || !(st.sel||[]).length){ alert('Write the message, then pick the lanes it belongs in.'); return; }
+    st.posts.push({x:st.msg, l:st.sel.slice(), t:today()}); st.msg=''; save(); };
+  const ml = root.querySelector('#ml'); if(ml) ml.onchange = e=>{ st.ml=e.target.value; save(); };
+  const am = root.querySelector('#addm'); if(am) am.onclick = ()=>{
+    if(!st.mn) return; st.members.push({n:st.mn, l:st.ml||LANES[0]}); st.mn=''; save(); };
+  root.querySelectorAll('[data-delm]').forEach(b=>b.onclick=()=>{ st.members.splice(+b.dataset.delm,1); save(); });
+}},
+
+/* ---------- 9. JiCredit ---------- */
+jicredit:{ title:'JiCredit', draw(root, st, save){
+  if(!Array.isArray(st.payers)){ st.payers=[]; st.scr='types'; st.type=null; }
+  const scr = st.scr||'types';
+  const type = st.type ? JT.find(t=>t.k===st.type) : null;
+  const banner = `<div class="demo">Demo. All figures shown are sample data. No live payments, no real customer records.</div>`;
+  const back = (to,label) => `<button class="back" data-scr="${to}" style="margin-bottom:12px">‹ ${label}</button>`;
+
+  /* 1 — the type grid */
+  if(scr==='types'){
+    root.innerHTML = banner + `
+    <div class="note" style="margin:0 0 14px">You already collect money every month. JiCredit makes that money build you a loan.</div>
+    <div class="jgrid">
+      ${JT.map(t=>`<button class="jt ${st.type===t.k?'on':''}" data-type="${t.k}">
+        <b>${t.n}</b><small>${t.who}</small></button>`).join('')}
+    </div>
+    ${st.payers.length?`<div class="btnrow"><button class="btn" data-scr="ledger">Open this month</button></div>`:''}`;
+    root.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{
+      st.type=b.dataset.type; st.step=1; st.scr='setup';
+      const t=JT.find(x=>x.k===st.type); st.biz=''; st.amt=t.amt; st.day='5'; st.cnt=Math.min(t.cnt,12); save(); });
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 2 — three setup steps */
+  if(scr==='setup'){
+    const step = st.step||1;
+    const val = demoRail.validateAccount(st.acct||'');
+    root.innerHTML = banner + back('types','Business type') + `
+    <div class="steps">${[1,2,3].map(i=>`<span class="stp ${i<=step?'on':''}"></span>`).join('')}</div>
+    ${step===1?`
+      <div class="sect" style="margin-top:14px">Step 1 · Who you bill</div>
+      <div class="frow"><label class="fl">Business name<input class="in" id="f_biz" value="${ESC(st.biz)}"></label></div>
+      <div class="frow"><label class="fl">How many ${type.who.toLowerCase()}<input class="in" id="f_cnt" inputmode="numeric" value="${ESC(st.cnt)}"></label></div>
+      <div class="btnrow"><button class="btn" data-step="2">Next</button></div>`
+    : step===2?`
+      <div class="sect" style="margin-top:14px">Step 2 · What they pay</div>
+      <div class="frow">
+        <label class="fl">Amount each<input class="in" id="f_amt" inputmode="decimal" value="${ESC(st.amt)}"></label>
+        <label class="fl">Due day<input class="in" id="f_day" inputmode="numeric" value="${ESC(st.day)}"></label>
+      </div>
+      <div class="out"><div class="orow"><span>Expected every month</span><b class="big">${KS(N(st.amt)*N(st.cnt))}</b></div>
+        <div class="note">Invoices raise themselves on the ${ESC(st.day)}th. No till number, no typing, no chasing on WhatsApp.</div></div>
+      <div class="btnrow"><button class="btn ghost" data-step="1">Back</button><button class="btn" data-step="3">Next</button></div>`
+    :`
+      <div class="sect" style="margin-top:14px">Step 3 · Where it lands</div>
+      <div class="frow"><label class="fl">Your settlement account<input class="in" id="f_acct" inputmode="numeric" placeholder="Bank account number" value="${ESC(st.acct)}"></label></div>
+      <div class="out" style="border-color:${val.ok?'rgba(231,178,75,.3)':'var(--line)'}">
+        <div class="orow"><span>Account check</span><b>${val.ok?'Valid':'Not yet'}</b></div>
+        <div class="note">Money moves payer account to biller account, directly. JiCredit never holds, pools or touches client funds.</div>
+      </div>
+      <div class="btnrow"><button class="btn ghost" data-step="2">Back</button>
+        <button class="btn" id="build" ${val.ok?'':'disabled'}>Build the ledger</button></div>`}`;
+    bindVals(root, st, save, ['biz','cnt','amt','day','acct']);
+    root.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{ st.step=+b.dataset.step; save(); });
+    const bd=root.querySelector('#build'); if(bd) bd.onclick=()=>{
+      const n=Math.max(1,Math.min(24,N(st.cnt)));
+      st.payers = Array.from({length:n},(_,i)=>{
+        const r=Math.random();
+        const state = r<0.62?'paid':(r<0.8?'short':'silent');
+        return {n:JNAMES[i%JNAMES.length], p:'07'+String(10000000+Math.floor(Math.random()*8999999)),
+          due:N(st.amt), got: state==='paid'?N(st.amt):(state==='short'?Math.round(N(st.amt)*0.4):0), s:state};
+      });
+      st.hist = Array.from({length:6},()=>Math.round(62+Math.random()*33));
+      st.scr='ledger'; save();
+    };
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 3 — the monthly ledger: paid, short, silent */
+  if(scr==='ledger'){
+    const due = st.payers.reduce((s,p)=>s+p.due,0);
+    const got = st.payers.reduce((s,p)=>s+p.got,0);
+    const cnt = k => st.payers.filter(p=>p.s===k).length;
+    const rate = due? got/due*100 : 0;
+    root.innerHTML = banner + back('types', type?type.n:'Business type') + `
+    <div class="out">
+      <div class="orow"><span>${ESC(st.biz||(type?type.n:''))} · due this month</span><b>${KS(due)}</b></div>
+      <div class="orow"><span>Collected</span><b class="big">${KS(got)}</b></div>
+      <div class="bar" style="margin-top:8px"><i style="width:${Math.round(rate)}%"></i></div>
+      <div class="note">${Math.round(rate)}% collected · ${cnt('paid')} paid · ${cnt('short')} short · ${cnt('silent')} silent</div>
+    </div>
+    <div class="tabs" style="margin-top:14px">
+      ${[['ledger','Ledger'],['payer','Payer view'],['credit','Credit file'],['rail','Bank rail']].map(([k,l])=>
+        `<button class="tab ${k==='ledger'?'on':''}" data-scr="${k}" style="font-size:11px">${l}</button>`).join('')}
+    </div>
+    <div class="list" style="margin-top:12px">
+      ${st.payers.map((p,i)=>`<div class="li">
+        <span>${ESC(p.n)}<br><small class="st-${p.s}">${p.s} · ${KS(p.got)} of ${KS(p.due)}</small></span>
+        <span>${p.s==='paid'?'<b style="color:var(--gold)">✓</b>':`<button class="x mark" data-pay="${i}">Collect</button>`}
+          <button class="x" data-msg="${i}">↗</button></span></div>`).join('')}
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" id="csv">CSV</button>
+      <button class="btn ghost" id="sheet">Spreadsheet</button>
+      <button class="btn ghost" id="pdf">Lender statement</button>
+    </div>`;
+    root.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{
+      const p=st.payers[+b.dataset.pay];
+      const r=demoRail.requestCollection(p, p.due-p.got);
+      if(r.ok){ p.got=p.due; p.s='paid'; p.ref=r.ref; }
+      save();
+    });
+    root.querySelectorAll('[data-msg]').forEach(b=>b.onclick=()=>{ st.msgi=+b.dataset.msg; st.scr='msg'; save(); });
+    root.querySelector('#csv').onclick = ()=> download('jicredit-'+Date.now()+'.csv',
+      ['Name,Phone,Due,Collected,Status'].concat(st.payers.map(p=>[p.n,p.p,p.due,p.got,p.s].join(','))).join('\n'),'text/csv');
+    root.querySelector('#sheet').onclick = ()=> download('jicredit-'+Date.now()+'.xls',
+      '<table><tr><th>Name</th><th>Phone</th><th>Due</th><th>Collected</th><th>Status</th></tr>'+
+      st.payers.map(p=>`<tr><td>${p.n}</td><td>${p.p}</td><td>${p.due}</td><td>${p.got}</td><td>${p.s}</td></tr>`).join('')+
+      '</table>','application/vnd.ms-excel');
+    root.querySelector('#pdf').onclick = ()=>{ st.scr='credit'; save(); };
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 3b — the WhatsApp message, shown before it sends */
+  if(scr==='msg'){
+    const p = st.payers[st.msgi||0];
+    const text = `Habari ${p.n}.\n${st.biz||(type?type.n:'')} — ${KS(p.due-p.got)} is outstanding for this month.\nYou will get a request on your phone for the exact amount. Approve it and you are done.\nAsante.`;
+    root.innerHTML = banner + back('ledger','Ledger') + `
+    <div class="sect" style="margin-top:0">This is what they will see</div>
+    <div class="msgbox">${ESC(text).replace(/\n/g,'<br>')}</div>
+    <div class="btnrow"><button class="btn" id="send">Send on WhatsApp</button></div>
+    <div class="note">Nothing is sent until you tap. The demo shows the message first on purpose — a collection message people did not expect is how billers lose payers.</div>`;
+    root.querySelector('#send').onclick = ()=> wa(p.p, text);
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 4 — payer side */
+  if(scr==='payer'){
+    const bills = [
+      {b:st.biz||(type?type.n:'Your biller'), a:N(st.amt), s:'due'},
+      {b:'Ruiru Water', a:1500, s:'paid'},
+      {b:'Mtaa Garbage', a:500, s:'paid'},
+      {b:'Fibre — 20mbps', a:3000, s:'due'}
+    ];
+    root.innerHTML = banner + back('ledger','Ledger') + `
+    <div class="note" style="margin:0 0 12px">One person, every bill they pay through JiCredit, in one list. This is the side that drags payers onto the rail.</div>
+    <div class="list">${bills.map(x=>`<div class="li"><span>${ESC(x.b)}<br><small class="st-${x.s==='paid'?'paid':'silent'}">${x.s}</small></span>
+      <b>${KS(x.a)}</b></div>`).join('')}</div>
+    <div class="out"><div class="orow"><span>Owing right now</span><b class="big">${KS(bills.filter(x=>x.s==='due').reduce((s,x)=>s+x.a,0))}</b></div></div>`;
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 5 — credit file */
+  if(scr==='credit'){
+    const h = st.hist||[70,74,80,77,85,88];
+    const avg = h.reduce((a,b)=>a+b,0)/h.length;
+    const due = st.payers.reduce((s,p)=>s+p.due,0);
+    root.innerHTML = banner + back('ledger','Ledger') + `
+    <div class="out">
+      <div class="orow"><span>Months on the rail</span><b>${h.length}</b></div>
+      <div class="orow"><span>Average collection rate</span><b class="big">${Math.round(avg)}%</b></div>
+      <div class="orow"><span>Verified monthly billing</span><b>${KS(due)}</b></div>
+    </div>
+    <div class="sect">Collection rate, month by month</div>
+    <div class="hist">${h.map((v,i)=>`<div class="hb"><i style="height:${v}%"></i><small>m${i+1}</small></div>`).join('')}</div>
+    <div class="note">Six months of bank-confirmed collections is the document missing from the SME loan files banks decline. It is not a statement the business wrote — it is a record the rail produced.</div>
+    <div class="btnrow"><button class="btn" id="stmt">Lender statement</button></div>`;
+    root.querySelector('#stmt').onclick = ()=>{
+      const t=['JICREDIT — LENDER STATEMENT','Demo. Sample data. No live payments.','',
+        'Biller: '+(st.biz||(type?type.n:'')), 'Type: '+(type?type.n:''), 'Date: '+today(),'',
+        'Monthly billing,'+Math.round(due),'Payers,'+st.payers.length,
+        'Average collection rate,'+Math.round(avg)+'%','','Month,Collection rate']
+        .concat(h.map((v,i)=>`${i+1},${v}%`)).join('\n');
+      download('jicredit-lender-statement.csv', t, 'text/csv');
+    };
+    bindScr(root, st, save);
+    return;
+  }
+
+  /* 6 — the bank rail: the actual ask */
+  root.innerHTML = banner + back('ledger','Ledger') + `
+  <div class="note" style="margin:0 0 12px">Everything above runs on one adapter. Four endpoints is the whole ask.</div>
+  <div class="list">
+    ${[['Collection request','Push an exact amount to the payer\'s phone.'],
+       ['Account validation','Confirm the biller\'s settlement account.'],
+       ['Transaction callback','Notify when a payment lands.'],
+       ['Direct debit mandate','Later. Approve once, stop chasing monthly.']]
+      .map(([a,b],i)=>`<div class="li"><span><b>${i+1}. ${a}</b><br><small>${b}</small></span></div>`).join('')}
+  </div>
+  <div class="code">const demoRail = { requestCollection, validateAccount }</div>
+  <div class="note">All bank contact goes through that block. Nothing else in the app touches a payment rail — swap the adapter, leave the rest alone. Credentials never ship in the bundle; they sit on the server that signs requests and receives callbacks.</div>
+  <div class="out"><div class="note" style="margin:0">Standing answer to compliance: money moves payer account to biller account. JiCredit never holds, pools or touches client funds.</div></div>`;
+  bindScr(root, st, save);
+}},
+
+/* ---------- 10. 10partners ---------- */
+tenpartners:{ title:'Credit file', draw(root, st, save){
+  const v = st.vals;
+  const n = v.length;
+  const mean = n? v.reduce((a,b)=>a+b,0)/n : 0;
+  const sd = n? Math.sqrt(v.reduce((a,b)=>a+(b-mean)*(b-mean),0)/n) : 0;
+  const cv = mean? sd/mean : 0;
+  const low = n? Math.min(...v) : 0;
+  const weak = n>=3 ? [...v].sort((a,b)=>a-b).slice(0,3).reduce((a,b)=>a+b,0)/3 : mean;
+  const thin = v.filter(x=> mean && x < mean*0.4).length;
+  let band='C', why='fewer than 6 months of record, or swings too wide to lend against';
+  if(n>=6 && cv<0.25 && !thin){ band='A'; why='6+ months, month-to-month swing under 25%, no month below 40% of average'; }
+  else if(n>=6 && cv<0.45){ band='B'; why='6+ months, swing under 45%'; }
+  const cap = weak*0.2;
+  root.innerHTML = `
+  <div class="frow"><label class="fl">Business name<input class="in" id="f_biz" value="${ESC(st.biz)}"></label></div>
+  <div class="frow">
+    <label class="fl">Add a month's M-Pesa inflow<input class="in" id="f_v" inputmode="decimal" placeholder="e.g. 84000" value="${ESC(st.v)}"></label>
+  </div>
+  <div class="btnrow"><button class="btn" id="add">Add month</button>
+    ${n?'<button class="btn ghost" id="clr">Clear</button>':''}</div>
+  <div class="months">${v.map((x,i)=>`<button class="mo" data-del="${i}">${Math.round(x/1000)}k<small>m${i+1}</small></button>`).join('')
+    || '<div class="none">Add 6 to 12 months from the statement. Nothing is uploaded — the numbers stay on this phone.</div>'}</div>
+  ${n?`
+  <div class="out">
+    <div class="orow"><span>Months on record</span><b>${n}</b></div>
+    <div class="orow"><span>Average month</span><b>${KS(mean)}</b></div>
+    <div class="orow"><span>Weakest month</span><b>${KS(low)}</b></div>
+    <div class="orow"><span>Month-to-month swing</span><b>${Math.round(cv*100)}%</b></div>
+    <div class="orow" style="border-top:1px solid var(--line);margin-top:6px;padding-top:9px">
+      <span>Band</span><b class="big">${band}</b></div>
+    <div class="note">Band ${band}: ${why}.</div>
+  </div>
+  <div class="out">
+    <div class="orow"><span>Weakest quarter average</span><b>${KS(weak)}</b></div>
+    <div class="orow"><span>Repayment at 20% of that</span><b class="big">${KS(cap)}</b></div>
+    <div class="note">This is arithmetic on the numbers entered, not a lending decision. The lender sets the rule; this file just shows the working so both sides argue about the same figures.</div>
+  </div>
+  <div class="btnrow"><button class="btn" id="pack">Export the file</button>
+    <button class="btn ghost" id="send">Send summary</button></div>`:''}`;
+  bindVals(root, st, save, ['biz','v']);
+  root.querySelector('#add').onclick = ()=>{ if(!N(st.v)) return; st.vals.push(N(st.v)); st.v=''; save(); };
+  const cl=root.querySelector('#clr'); if(cl) cl.onclick=()=>{ st.vals=[]; save(); };
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ st.vals.splice(+b.dataset.del,1); save(); });
+  const pk=root.querySelector('#pack'); if(pk) pk.onclick=()=>download('credit-file.csv',
+    [`Credit file,${st.biz||'unnamed'},${today()}`,'','Month,Inflow']
+      .concat(v.map((x,i)=>`${i+1},${Math.round(x)}`))
+      .concat(['',`Months,${n}`,`Average,${Math.round(mean)}`,`Weakest month,${Math.round(low)}`,
+        `Swing,${Math.round(cv*100)}%`,`Band,${band}`,`Weakest quarter average,${Math.round(weak)}`,
+        `Repayment at 20%,${Math.round(cap)}`]).join('\n'),'text/csv');
+  const sn=root.querySelector('#send'); if(sn) sn.onclick=()=>wa(DB.get('system').wa,
+    `Credit file · ${st.biz||'business'}\n${n} months\nAverage ${KS(mean)}\nSwing ${Math.round(cv*100)}%\nBand ${band}\nRepayment at 20% of weakest quarter: ${KS(cap)}`);
+}},
+
+/* ---------- 6. System ---------- */
+system:{ title:'Data and sharing', draw(root, st, save){
+  const size = JSON.stringify(DB.d).length;
+  const reg = DB.get('nyumbani');
+  root.innerHTML = `
+  <div class="out">
+    <div class="orow"><span>Working apps</span><b>${Object.keys(MODULES).length-1}</b></div>
+    <div class="orow"><span>App pages</span><b>${APPS.length}</b></div>
+    <div class="orow"><span>Registry members</span><b>${reg.members.length}</b></div>
+    <div class="orow"><span>Data held</span><b>${(size/1024).toFixed(1)} KB</b></div>
+    <div class="note">Everything typed into these apps is stored on this device only. Nothing is sent anywhere unless you tap a send button.</div>
+  </div>
+
+  <div class="sect">Where signups go</div>
+  <div class="frow"><label class="fl">Your WhatsApp number<input class="in" id="f_wa" inputmode="tel" value="${ESC(st.wa||'')}"></label></div>
+  <div class="frow"><label class="fl">Form endpoint (optional)<input class="in" id="f_endpoint" placeholder="Formspree or Supabase URL" value="${ESC(st.endpoint||'')}"></label></div>
+  <div class="note">With no endpoint, a signup stays on the person's phone and they send it to you on WhatsApp. Paste a Formspree or Supabase URL and each one is also posted there — which is what you want once this is on GitHub Pages and strangers are signing up.</div>
+
+  <div class="sect">Put it online</div>
+  <div class="note" style="margin:0">Rename this file index.html, push it to a repo, turn on GitHub Pages. That is the whole deployment — one file, no build step, no server. It also runs offline from a phone's downloads folder, so you can WhatsApp it to someone with no data and it still works. Everyone who opens it gets their own empty copy.</div>
+
+  <div class="sect">Your data</div>
+  <div class="btnrow"><button class="btn" id="exp">Export everything</button><button class="btn ghost" id="impb">Import</button></div>
+  <div id="impwrap" style="display:none;margin-top:12px">
+    <label class="fl">Paste an exported file's contents<textarea class="in" id="impt" rows="4"></textarea></label>
+    <div class="btnrow"><button class="btn" id="impgo">Load it</button></div>
+  </div>
+  <div class="btnrow"><button class="btn ghost" id="wipe">Erase all app data</button></div>`;
+  bindVals(root, st, save, ['wa','endpoint']);
+  root.querySelector('#exp').onclick = ()=> download('alvin-os-data-'+Date.now()+'.json', JSON.stringify(DB.d,null,1), 'application/json');
+  root.querySelector('#impb').onclick = ()=>{ const w=root.querySelector('#impwrap'); w.style.display = w.style.display==='none'?'block':'none'; };
+  root.querySelector('#impgo').onclick = ()=>{
+    try{ DB.d = JSON.parse(root.querySelector('#impt').value); save(); }
+    catch(e){ alert('That did not read as an export file.'); }
+  };
+  root.querySelector('#wipe').onclick = ()=>{ DB.d={}; save(); };
+}}
+};
+
+/* ============ state + render ============ */
+const stage = document.getElementById('stage');
+const dock  = document.getElementById('dock');
+let stack = [{v:'home', page:0}];
+let dir = 'push';
+
+const byId = id => APPS.find(a=>a.id===id);
+const pages = [
+  {t:'Building now', f:a=>a.p===0},
+  {t:'Portfolio',    f:a=>a.p===1},
+  {t:'Field and tools', f:a=>a.p===2}
+];
+
+function tile(a, cls){
+  return `<span class="tile ${cls||''}" style="background:linear-gradient(155deg,${a.c},${shade(a.c,-28)})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${G[a.g]}</svg></span>`;
+}
+function shade(hex,amt){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+const chev = '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></span>';
+const backBtn = (label) => `<button class="back" data-act="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>${label}</button>`;
+
+function render(){
+  const s = stack[stack.length-1];
+  let html = '';
+  if(s.v==='home'){
+    const list = APPS.filter(pages[s.page].f);
+    html = `<div class="view ${dir}">
+      <div class="scroll">
+        <div class="searchbar" data-act="search">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          Search ${APPS.length} apps
+        </div>
+        <div class="widget">
+          <div class="row"><span class="n">${APPS.length}</span>
+            <span class="lab">things built or specified<br>across the portfolio</span></div>
+          <div class="sub">Nine of them run for real. Tap any icon and it opens working — About, at the top right, is where the thinking behind it lives.</div>
+        </div>
+        <div class="cta"><button data-run="nyumbani">Sign up at the Nyumbani Hub registry</button></div>
+        <div class="pagehead">
+          <div><h2>${pages[s.page].t}</h2><div class="count">${list.length} apps · page ${s.page+1} of ${pages.length}</div></div>
+          <div class="arrows">
+            <button data-act="prevpage" ${s.page===0?'disabled':''}>‹</button>
+            <button data-act="nextpage" ${s.page===pages.length-1?'disabled':''}>›</button>
+          </div>
+        </div>
+        <div class="grid">
+          ${list.map(a=>`<button class="app" data-open="${a.id}">${tile(a)}<span class="nm">${a.n}</span></button>`).join('')}
+        </div>
+        <div class="dots">
+          ${pages.map((p,i)=>`<button class="dot ${i===s.page?'on':''}" data-page="${i}" title="${p.t}"></button>`).join('')}
+        </div>
+      </div></div>`;
+  }
+  else if(s.v==='app'){
+    const a = byId(s.id);
+    const prev = stack[stack.length-2];
+    const blab = (prev && prev.v==='run') ? 'Back' : 'Home';
+    html = `<div class="view ${dir}">
+      <div class="appbar">${backBtn(blab)}<span class="t">${a.n}</span></div>
+      <div class="scroll">
+        <div class="hero">${tile(a)}
+          <div><h1>${a.n}</h1><p>${a.tag}</p>
+          <span class="pill" style="color:${shade(a.c,70)}">${a.status}</span></div>
+        </div>
+        <div class="alias">Also called: ${a.alias}</div>
+        ${MODULES[a.id]?`<div class="runrow"><button class="btn" data-run="${a.id}">Open ${MODULES[a.id].title}</button></div>`:''}
+        <div class="cards">
+          ${a.s.map((sec,i)=>`<button class="card" data-sec="${i}">
+            <span><span class="ct">${sec.t}</span><span class="cs">${sec.d}</span></span>${chev}</button>`).join('')}
+        </div>
+      </div></div>`;
+  }
+  else if(s.v==='sec'){
+    const a = byId(s.id), sec = a.s[s.i];
+    html = `<div class="view ${dir}">
+      <div class="appbar">${backBtn(a.n)}<span class="t">${sec.t}</span></div>
+      <div class="scroll"><div class="detail">
+        <h3>${sec.t}</h3><div class="of">${sec.d}</div>
+        <ul>${sec.l.map(x=>`<li>${x}</li>`).join('')}</ul>
+      </div></div></div>`;
+  }
+  else if(s.v==='run'){
+    const a = byId(s.id);
+    html = `<div class="view ${dir}">
+      <div class="appbar">${backBtn('Home')}<span class="t">${a.n}</span><button class="ibtn" data-info="${a.id}">About</button></div>
+      <div class="scroll"><div class="run" id="modroot"></div></div></div>`;
+  }
+  else if(s.v==='search'){
+    const q = (s.q||'').trim().toLowerCase();
+    const hits = q ? APPS.filter(a=>(a.n+' '+a.tag+' '+a.alias+' '+a.status).toLowerCase().includes(q)) : APPS;
+    html = `<div class="view ${dir}">
+      <div class="appbar">${backBtn('Back')}<span class="t">Search</span></div>
+      <div class="searchwrap"><input id="q" placeholder="Name, status or what it does" value="${(s.q||'').replace(/"/g,'&quot;')}"></div>
+      <div class="scroll">
+        ${hits.length ? `<div class="results">${hits.map(a=>`<button class="res" data-open="${a.id}">${tile(a)}
+            <span><span class="rn">${a.n}</span><span class="rs">${a.status} · ${a.tag}</span></span></button>`).join('')}</div>`
+          : `<div class="empty">Nothing matches "${s.q}".<br>Try a status like paused, or a word from what it does.</div>`}
+      </div></div>`;
+  }
+  stage.innerHTML = html;
+  if(s.v==='run') drawMod(s.id);
+  if(s.v==='search'){
+    const q = document.getElementById('q');
+    q.addEventListener('input', e=>{ s.q = e.target.value; const pos=e.target.selectionStart; dir=''; render(); const n=document.getElementById('q'); n.focus(); n.setSelectionRange(pos,pos); });
+  }
+  document.getElementById('navBack').disabled = stack.length<2;
+  dir='push';
+}
+
+function drawMod(id){
+  const root=document.getElementById('modroot'); if(!root) return;
+  const a=document.activeElement, fid=(a&&a.id)?a.id:null;
+  let pos=null; try{ pos=a&&a.selectionStart; }catch(e){}
+  MODULES[id].draw(root, DB.get(id), ()=>{ DB.save(); drawMod(id); });
+  if(fid){ const n=document.getElementById(fid);
+    if(n){ n.focus(); if(pos!=null&&n.setSelectionRange){ try{ n.setSelectionRange(pos,pos); }catch(e){} } } }
+}
+function renderDock(){
+  dock.innerHTML = APPS.filter(a=>a.dock).map(a=>
+    `<button class="app" data-open="${a.id}">${tile(a)}<span class="nm">${a.n.split(' ')[0]}</span></button>`).join('');
+}
+
+function push(s){ dir='push'; stack.push(s); render(); }
+function pop(){ if(stack.length>1){ dir='pop'; stack.pop(); render(); } }
+function home(){ dir='pop'; stack=[{v:'home',page:stack[0].page||0}]; render(); }
+
+document.body.addEventListener('click', e=>{
+  const t = e.target.closest('[data-open],[data-act],[data-sec],[data-page],[data-run],[data-info]');
+  if(!t) return;
+  if(t.dataset.run){ push({v:'run', id:t.dataset.run}); return; }
+  if(t.dataset.info){ push({v:'app', id:t.dataset.info}); return; }
+  if(t.dataset.open){ const id=t.dataset.open;
+    if(!byId(id)) return;
+    push(MODULES[id]?{v:'run',id:id}:{v:'app',id:id}); return; }
+  if(t.dataset.sec!==undefined && stack[stack.length-1].v==='app'){
+    push({v:'sec', id:stack[stack.length-1].id, i:+t.dataset.sec}); return; }
+  if(t.dataset.page!==undefined){ stack[0].page = +t.dataset.page; dir=''; render(); return; }
+  const act = t.dataset.act;
+  if(act==='back') pop();
+  if(act==='search') push({v:'search', q:''});
+  if(act==='nextpage'){ stack[0].page++; dir='push'; render(); }
+  if(act==='prevpage'){ stack[0].page--; dir='pop'; render(); }
+});
+document.getElementById('navBack').onclick = pop;
+document.getElementById('navHome').onclick = home;
+document.getElementById('navSearch').onclick = ()=>{ if(stack[stack.length-1].v!=='search') push({v:'search',q:''}); };
+
+/* swipe between home pages */
+let x0=null;
+stage.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
+stage.addEventListener('touchend',e=>{
+  if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; x0=null;
+  const s=stack[stack.length-1];
+  if(Math.abs(dx)<60) return;
+  if(s.v==='home'){
+    if(dx<0 && s.page<pages.length-1){ s.page++; dir='push'; render(); }
+    if(dx>0 && s.page>0){ s.page--; dir='pop'; render(); }
+  } else if(dx>90){ pop(); }
+},{passive:true});
+
+/* clock */
+function tick(){
+  const t=new Date().toLocaleTimeString('en-GB',{timeZone:'Africa/Nairobi',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clock').textContent=t;
+}
+tick(); setInterval(tick,20000);
+DB.load().then(()=>{ renderDock(); render(); });
+</script>
+</body>
+</html>
